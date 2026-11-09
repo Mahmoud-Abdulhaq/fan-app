@@ -125,7 +125,7 @@ export default function Home() {
         </div>
         <div className="rounded-lg border border-dashed border-border p-5">
           <h2 className="text-lg font-bold">Your corner</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Sign in to favorite kits, rate them, keep notes, build tier lists and track your trivia streak.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Sign in to favorite kits, rate them, keep notes and track your trivia streak.</p>
           <div className="mt-3 flex gap-3">
             <Link href="/sign-up" className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground" data-testid="link-home-signup">Create account</Link>
             <Link href="/sign-in" className="rounded-md border border-border px-4 py-2 text-sm font-bold" data-testid="link-home-signin">Sign in</Link>

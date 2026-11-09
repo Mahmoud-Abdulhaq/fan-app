@@ -10,6 +10,22 @@ const MECHANICS = [
   ["Bed defense layering", "Outer wood or wool to break tool symmetry, a blast-resistant inner layer, and trap coverage. A clutch save beats a thick wall."],
   ["Bed-break timing", "Season 16 tightened the bed-trade window. Only trade beds when you can convert the respawn advantage."],
 ];
+const PLAY_STEPS = [
+  ["1. Protect your bed", "Your bed is your respawn point. Once it breaks, every death is permanent, so keep an eye on incoming bridges."],
+  ["2. Gather and upgrade", "Collect iron and gold for gear, diamonds for team upgrades, and emeralds for the strongest equipment."],
+  ["3. Build a safe route", "Bridge toward resource islands and enemy bases. Carry blocks and learn to place them quickly if you need to clutch."],
+  ["4. Pick your fight", "Coordinate with your team, use your kit's role, and attack when your gear or numbers give you an advantage."],
+  ["5. Break beds, then finish", "Use the right tool and timing to break enemy beds. After your own bed is gone, avoid risky fights: there are no respawns left."],
+];
+const SWORDS = [
+  ["Wood Sword", "Starting sword", "Your basic sword at the start of a match."],
+  ["Stone Sword", "20 Iron", "An early upgrade from the Item Shop."],
+  ["Iron Sword", "70 Iron", "A stronger shop upgrade using iron."],
+  ["Diamond Sword", "4 Emeralds", "A high-tier shop upgrade."],
+  ["Emerald Sword", "20 Emeralds", "The top sword in the standard shop progression."],
+  ["Void Sword", "10 Void Crystals", "A separate, mode-dependent sword; not part of every match's normal shop path."],
+];
+const SWORD_SOURCE = "https://robloxbedwars.fandom.com/wiki/Sword";
 const DRAFT = [
   ["Economy engine", "Bounty Hunter or Milo"], ["Primary carry", "Grim Reaper, Hannah or Aery"], ["Flex disrupter", "Void Regent or Jade"],
   ["Support buffer", "Baker or Whisper, tethered to the carry"], ["Ranged / defense", "Archer or Trapper"],
@@ -25,7 +41,7 @@ const PANEL = [
   ["Competitive Analyst", "Owns kit data, tiers and counter logic. No claim enters without a current-season source."],
   ["Full-Stack Developer", "Every requirement maps to a concrete route, model or component."],
   ["UI/UX Designer", "Mobile parity first. Nothing ships that breaks a 360px viewport."],
-  ["Data Architect", "Favorites, ratings, rankings and notes survive refreshes and new sessions."],
+  ["Data Architect", "Favorites, ratings, and notes survive refreshes and new sessions."],
   ["QA & Code Inspector", "Every view and CRUD action tested at three breakpoints."],
 ];
 const RESOURCES = [
@@ -42,14 +58,33 @@ function Block({ title, children }: { title: string; children: ReactNode }) {
 }
 
 export default function Guide() {
-  usePageMeta("Guide", "BedWars mechanics, ranked draft template, kits to avoid, 2026 patches and resources.");
+  usePageMeta("How to play BedWars", "A quick guide to BedWars objectives, resources, swords, team strategy and kit picks.");
   return (
     <div>
-      <PageHeader eyebrow="Field guide" title="What wins BedWars matches">Short, opinionated, and sourced from the supplied spec.</PageHeader>
+      <PageHeader eyebrow="Field guide" title="How to play BedWars">Protect your bed, build up your gear, and take fights with a plan.</PageHeader>
       <div className="mb-6 rounded-lg border border-primary/40 bg-primary/5 p-4 text-sm" data-testid="text-guide-attribution">
         <p className="font-mono font-semibold text-primary">{SNAPSHOT_LABEL}</p><p className="mt-1 text-muted-foreground">{ATTRIBUTION}</p>
       </div>
+      <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3" data-testid="section-how-to-play">
+        {PLAY_STEPS.map(([title, detail]) => (
+          <section key={title} className="rounded-lg border border-card-border bg-card p-4">
+            <h2 className="font-bold text-primary">{title}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{detail}</p>
+          </section>
+        ))}
+      </div>
       <div className="grid gap-5 lg:grid-cols-2">
+        <Block title="Swords and shop upgrades">
+          <p className="mb-3 text-sm text-muted-foreground">Standard Item Shop progression and the separate Void Sword, as listed by the BedWars Wiki. Costs and availability can vary with game modes or updates.</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead><tr className="border-b border-border text-xs uppercase text-muted-foreground"><th className="py-2 pr-3">Sword</th><th className="py-2 pr-3">Cost</th><th className="py-2">Notes</th></tr></thead>
+              <tbody>{SWORDS.map(([name, cost, note]) => <tr key={name} className="border-b border-border/60 last:border-0"><th scope="row" className="py-2 pr-3 font-semibold">{name}</th><td className="py-2 pr-3 whitespace-nowrap">{cost}</td><td className="py-2 text-muted-foreground">{note}</td></tr>)}</tbody>
+            </table>
+          </div>
+          <p className="mt-3 text-sm text-muted-foreground">Other named swords include the Rageblade, Dao, Big Wooden Sword, and Ice Sword. These are not standard shop upgrades; availability depends on the kit, mode, or current game events.</p>
+          <a href={SWORD_SOURCE} target="_blank" rel="noreferrer" className="mt-2 inline-block text-sm font-semibold text-primary hover:underline">Check the BedWars Wiki sword page for updates</a>
+        </Block>
         <Block title="Core mechanics">
           <dl className="space-y-3 text-sm">{MECHANICS.map(([t, d]) => <div key={t}><dt className="font-semibold text-primary">{t}</dt><dd className="text-foreground/85">{d}</dd></div>)}</dl>
         </Block>

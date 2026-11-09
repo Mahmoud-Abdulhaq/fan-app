@@ -4,7 +4,6 @@ import {
   getGetDashboardQueryKey,
   getGetProfileQueryKey,
   getListKitsQueryKey,
-  getListRankingsQueryKey,
   useDeleteFavorite,
   useGetProfile,
   useSaveFavorite,
@@ -14,12 +13,11 @@ import { useToast } from "@/hooks/use-toast";
 
 export function useInvalidate() {
   const qc = useQueryClient();
-  return (what: ("kits" | "dashboard" | "profile" | "rankings")[]) => {
+  return (what: ("kits" | "dashboard" | "profile")[]) => {
     const keys = {
       kits: getListKitsQueryKey(),
       dashboard: getGetDashboardQueryKey(),
       profile: getGetProfileQueryKey(),
-      rankings: getListRankingsQueryKey(),
     };
     what.forEach((w) => qc.invalidateQueries({ queryKey: keys[w] }));
   };

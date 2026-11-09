@@ -14,7 +14,6 @@ import Dashboard from "@/pages/dashboard";
 import Kits from "@/pages/kits";
 import KitDetail from "@/pages/kit-detail";
 import CounterPage from "@/pages/counter";
-import Rankings from "@/pages/rankings";
 import Compare from "@/pages/compare";
 import Guide from "@/pages/guide";
 import { usePageMeta } from "@/lib/bw";
@@ -99,7 +98,7 @@ function AuthShell({ children }: { children: ReactNode }) {
 }
 
 function SignInPage() {
-  usePageMeta("Sign in", "Sign in to save favorites, ratings, notes and tier lists.");
+  usePageMeta("Sign in", "Sign in to save favorites, ratings, and notes.");
   return (
     <AuthShell>
       <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} />
@@ -175,7 +174,6 @@ function AppRoutes() {
               <Route path="/kits" component={Kits} />
               <Route path="/kits/:id" component={KitDetail} />
               <Route path="/counter" component={CounterPage} />
-              <Route path="/rankings" component={Rankings} />
               <Route path="/compare" component={Compare} />
               <Route path="/guide" component={Guide} />
               <Route component={NotFound} />
@@ -198,8 +196,8 @@ function ClerkProviderWithRoutes() {
       signInUrl={`${basePath}/sign-in`}
       signUpUrl={`${basePath}/sign-up`}
       localization={{
-        signIn: { start: { title: "Back to the lobby", subtitle: "Sign in to your favorites, ratings and tier lists" } },
-        signUp: { start: { title: "Join BedWars Intel", subtitle: "Save kits, rate them, build your own tier lists" } },
+        signIn: { start: { title: "Back to the lobby", subtitle: "Sign in to your favorites, ratings, and notes" } },
+        signUp: { start: { title: "Join BedWars Intel", subtitle: "Save kits, rate them, and keep your own notes" } },
       }}
       routerPush={(to) => setLocation(stripBase(to))}
       routerReplace={(to) => setLocation(stripBase(to), { replace: true })}

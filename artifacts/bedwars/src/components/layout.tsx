@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useClerk, useUser, Show } from "@clerk/react";
-import { LayoutGrid, Shield, ListOrdered, GitCompare, BookOpen, LogOut, Gauge } from "lucide-react";
+import { LayoutGrid, Shield, GitCompare, BookOpen, LogOut, Gauge } from "lucide-react";
 import { MODES, TEAMS, usePrefs, SNAPSHOT_LABEL } from "@/lib/bw";
 import { cn } from "@/lib/utils";
 
@@ -10,7 +10,6 @@ const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 const NAV = [
   { href: "/kits", label: "Kits", icon: LayoutGrid },
   { href: "/counter", label: "Counter", icon: Shield },
-  { href: "/rankings", label: "Rankings", icon: ListOrdered },
   { href: "/compare", label: "Compare", icon: GitCompare },
   { href: "/guide", label: "Guide", icon: BookOpen },
 ];
@@ -104,7 +103,7 @@ export function Layout({ children }: { children: ReactNode }) {
         </div>
       </footer>
 
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur grid grid-cols-5">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur grid grid-cols-4">
         {NAV.map((n) => (
           <Link key={n.href} href={n.href} data-testid={`link-tab-${n.label.toLowerCase()}`}
             className={cn("flex flex-col items-center gap-0.5 py-2 text-[10px] font-semibold",
