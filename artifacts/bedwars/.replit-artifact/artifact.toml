@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "BedWars Intel"
+description = "A straightforward competitive BedWars companion with 30 kits, counterpicks, comparisons, personal rankings, notes, ratings and daily trivia based on the supplied Season 17 specification."
+version = "1.0.0"
+id = "artifacts/bedwars"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24114
+
+[services.development]
+run = "pnpm --filter @workspace/bedwars run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/bedwars", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/bedwars/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24114"
+BASE_PATH = "/"

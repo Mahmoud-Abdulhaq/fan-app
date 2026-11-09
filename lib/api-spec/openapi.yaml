@@ -1,36 +1,312 @@
 openapi: 3.1.0
-info:
-  # Do not change the title, if the title changes, the import paths will be broken
-  title: Api
-  version: 0.1.0
-  description: API specification
-servers:
-  - url: /api
-    description: Base API path
-tags:
-  - name: health
-    description: Health operations
+info: {title: Api, version: 1.0.0}
+servers: [{url: /api}]
 paths:
   /healthz:
     get:
       operationId: healthCheck
-      tags: [health]
-      summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/HealthStatus"
+              schema: {$ref: "#/components/schemas/HealthStatus"}
+  /kits:
+    get:
+      operationId: listKits
+      responses:
+        "200":
+          description: All 30 kits with community ratings
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: "#/components/schemas/Kit"}}
+  /dashboard:
+    get:
+      operationId: getDashboard
+      responses:
+        "200":
+          description: Meta snapshot and real community aggregates
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Dashboard"}
+  /profile:
+    get:
+      operationId: getProfile
+      responses:
+        "200":
+          description: Signed in user's data
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Profile"}
+  /favorites/{kitId}:
+    parameters:
+      - {name: kitId, in: path, required: true, schema: {type: string}}
+    put:
+      operationId: saveFavorite
+      responses:
+        "200":
+          description: Saved
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Success"}
+    delete:
+      operationId: deleteFavorite
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Success"}
+  /ratings/{kitId}:
+    parameters:
+      - {name: kitId, in: path, required: true, schema: {type: string}}
+    put:
+      operationId: saveRating
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/RatingInput"}
+      responses:
+        "200":
+          description: Saved
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Success"}
+  /rankings:
+    get:
+      operationId: listRankings
+      responses:
+        "200":
+          description: Personal rankings
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: "#/components/schemas/Ranking"}}
+    post:
+      operationId: createRanking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/RankingInput"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Ranking"}
+  /rankings/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: string}}
+    put:
+      operationId: updateRanking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/RankingInput"}
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Ranking"}
+    delete:
+      operationId: deleteRanking
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Success"}
+  /notes:
+    post:
+      operationId: createNote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/NoteInput"}
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Note"}
+  /notes/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: string}}
+    put:
+      operationId: updateNote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/NoteInput"}
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Note"}
+    delete:
+      operationId: deleteNote
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Success"}
+  /counters:
+    post:
+      operationId: getCounters
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/CounterInput"}
+      responses:
+        "200":
+          description: Counter recommendations for every enemy
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: "#/components/schemas/Counter"}}
+  /trivia:
+    get:
+      operationId: getTrivia
+      responses:
+        "200":
+          description: Daily question
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Trivia"}
+    post:
+      operationId: answerTrivia
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/TriviaInput"}
+      responses:
+        "200":
+          description: Result recorded including incorrect answers
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/TriviaResult"}
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
+      properties: {status: {type: string}}
+    Success:
+      type: object
+      required: [success]
+      properties: {success: {type: boolean}}
+    Kit:
+      type: object
+      required: [id, name, category, tier, ability, strategy, counters, rank, averageRating, ratingCount, source]
       properties:
-        status:
-          type: string
-      required:
-        - status
-
+        id: {type: string}
+        name: {type: string}
+        category: {type: string, enum: [Fighter, Movement, Support, Economy, Defender, Ranged]}
+        tier: {type: string, enum: [S, A, B, C, D]}
+        ability: {type: string}
+        strategy: {type: string}
+        counters: {type: array, items: {type: string}}
+        rank: {type: integer}
+        averageRating: {type: number}
+        ratingCount: {type: integer}
+        source: {type: string}
+    Dashboard:
+      type: object
+      required: [featuredId, trending, topRated, totalRatings, snapshot]
+      properties:
+        featuredId: {type: string}
+        trending: {type: array, items: {type: string}}
+        topRated: {type: array, items: {type: string}}
+        totalRatings: {type: integer}
+        snapshot: {type: string}
+    RatingInput:
+      type: object
+      required: [rating]
+      properties: {rating: {type: integer, minimum: 1, maximum: 5}}
+    RankingItem:
+      type: object
+      required: [kitId, tier]
+      properties:
+        kitId: {type: string}
+        tier: {type: string, enum: [S, A, B, C, D]}
+    RankingInput:
+      type: object
+      required: [name, items]
+      properties:
+        name: {type: string, minLength: 1, maxLength: 80}
+        items: {type: array, maxItems: 30, items: {$ref: "#/components/schemas/RankingItem"}}
+    Ranking:
+      allOf:
+        - {$ref: "#/components/schemas/RankingInput"}
+        - type: object
+          required: [id, updatedAt]
+          properties:
+            id: {type: string}
+            updatedAt: {type: string}
+    NoteInput:
+      type: object
+      required: [kitId, text]
+      properties:
+        kitId: {type: string}
+        text: {type: string, minLength: 1, maxLength: 2000}
+    Note:
+      allOf:
+        - {$ref: "#/components/schemas/NoteInput"}
+        - type: object
+          required: [id]
+          properties: {id: {type: string}}
+    PersonalRating:
+      type: object
+      required: [kitId, rating]
+      properties: {kitId: {type: string}, rating: {type: integer}}
+    TriviaScore:
+      type: object
+      required: [date, correct]
+      properties: {date: {type: string}, correct: {type: boolean}}
+    Profile:
+      type: object
+      required: [favorites, ratings, notes, triviaScores]
+      properties:
+        favorites: {type: array, items: {type: string}}
+        ratings: {type: array, items: {$ref: "#/components/schemas/PersonalRating"}}
+        notes: {type: array, items: {$ref: "#/components/schemas/Note"}}
+        triviaScores: {type: array, items: {$ref: "#/components/schemas/TriviaScore"}}
+    CounterInput:
+      type: object
+      required: [enemyIds]
+      properties: {enemyIds: {type: array, maxItems: 4, uniqueItems: true, items: {type: string}}}
+    Counter:
+      type: object
+      required: [enemyId, counterIds, tip, highThreat]
+      properties:
+        enemyId: {type: string}
+        counterIds: {type: array, items: {type: string}}
+        tip: {type: string}
+        highThreat: {type: boolean}
+    Trivia:
+      type: object
+      required: [id, question, options, date]
+      properties:
+        id: {type: string}
+        question: {type: string}
+        options: {type: array, items: {type: string}}
+        date: {type: string}
+    TriviaInput:
+      type: object
+      required: [id, answer]
+      properties: {id: {type: string}, answer: {type: integer, minimum: 0, maximum: 3}}
+    TriviaResult:
+      type: object
+      required: [correct, correctAnswer, explanation]
+      properties:
+        correct: {type: boolean}
+        correctAnswer: {type: integer}
+        explanation: {type: string}

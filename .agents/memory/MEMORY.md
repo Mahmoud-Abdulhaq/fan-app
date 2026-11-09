@@ -1,0 +1,1 @@
+- [BedWars content provenance](bedwars-content.md) — preserve the supplied Season 17 snapshot attribution; category ordering is not a complete letter-tier assignment.
