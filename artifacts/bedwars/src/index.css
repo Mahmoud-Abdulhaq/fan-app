@@ -127,11 +127,16 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
     background-image:
-      radial-gradient(1100px 500px at 85% -10%, hsl(32 98% 56% / 0.08), transparent 60%),
-      linear-gradient(hsl(217 30% 21% / 0.35) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(217 30% 21% / 0.35) 1px, transparent 1px);
-    background-size: auto, 44px 44px, 44px 44px;
+      radial-gradient(760px 540px at 8% 18%, hsl(200 85% 55% / 0.08), transparent 68%),
+      radial-gradient(1100px 600px at 85% -10%, hsl(32 98% 56% / 0.1), transparent 65%),
+      linear-gradient(hsl(217 30% 21% / 0.22) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(217 30% 21% / 0.22) 1px, transparent 1px),
+      url("./assets/bedwars-arena.svg");
+    background-size: auto, auto, 44px 44px, 44px 44px, cover;
+    background-position: center, center, center, center, center top;
     background-attachment: fixed;
+    background-repeat: no-repeat, no-repeat, repeat, repeat, no-repeat;
+    background-color: hsl(var(--background));
   }
   h1, h2, h3, .font-display { font-family: 'Chakra Petch', sans-serif; letter-spacing: -0.01em; }
 }

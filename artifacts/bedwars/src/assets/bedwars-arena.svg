@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1100" fill="none">
+  <defs>
+    <linearGradient id="sky" x1="720" y1="0" x2="720" y2="1100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#15213b" stop-opacity=".08"/>
+      <stop offset=".55" stop-color="#101a30" stop-opacity=".28"/>
+      <stop offset="1" stop-color="#070d19" stop-opacity=".7"/>
+    </linearGradient>
+    <linearGradient id="islandTop" x1="700" y1="380" x2="700" y2="680" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#47695a"/>
+      <stop offset="1" stop-color="#24384a"/>
+    </linearGradient>
+    <linearGradient id="islandRock" x1="700" y1="540" x2="700" y2="840" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#29364e"/>
+      <stop offset="1" stop-color="#131d32"/>
+    </linearGradient>
+    <radialGradient id="dusk" cx="0" cy="0" r="1" gradientTransform="matrix(0 360 -520 0 1110 240)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fb923c" stop-opacity=".2"/>
+      <stop offset="1" stop-color="#fb923c" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="blocks" width="44" height="44" patternUnits="userSpaceOnUse">
+      <path d="M44 0H0v44" stroke="#9bb0d0" stroke-opacity=".12"/>
+    </pattern>
+  </defs>
+  <path fill="url(#sky)" d="M0 0h1440v1100H0z"/>
+  <path fill="url(#dusk)" d="M0 0h1440v1100H0z"/>
+  <path fill="url(#blocks)" d="M0 0h1440v1100H0z" opacity=".25"/>
+  <g fill="#dbeafe" opacity=".58">
+    <circle cx="118" cy="156" r="2"/><circle cx="248" cy="264" r="1.5"/><circle cx="408" cy="124" r="2"/>
+    <circle cx="580" cy="232" r="1.5"/><circle cx="804" cy="122" r="2"/><circle cx="1008" cy="176" r="1.5"/>
+    <circle cx="1260" cy="122" r="2"/><circle cx="1360" cy="300" r="1.5"/><circle cx="952" cy="344" r="1"/>
+    <circle cx="170" cy="416" r="1"/><circle cx="1240" cy="446" r="1"/>
+  </g>
+  <g opacity=".52">
+    <path fill="#496377" d="m92 492 36-30 36 30v29H92z"/><path fill="#30455b" d="M92 492h72v12H92z"/>
+    <path fill="#496377" d="m1250 405 28-24 28 24v23h-56z"/><path fill="#30455b" d="M1250 405h56v10h-56z"/>
+  </g>
+  <!-- A quiet bridge connects the floating islands across the match arena. -->
+  <g opacity=".52">
+    <path fill="#9a694e" d="M412 578h114v24H412zm114-18h92v24h-92zm92-18h100v24H618zm100-20h112v24H718zm112-20h99v24h-99zm99-18h115v24H929z"/>
+    <path fill="#f0a36c" d="M412 578h114v5H412zm114-18h92v5h-92zm92-18h100v5H618zm100-20h112v5H718zm112-20h99v5h-99zm99-18h115v5H929z"/>
+  </g>
+  <!-- Main floating island, with grass cap and faceted stone underside. -->
+  <g opacity=".68">
+    <path fill="url(#islandTop)" d="m458 526 101-79 108-42 76-17 104 21 101 48 54 47-68 44-111 20-92 5-107-12-93 18-101-13z"/>
+    <path fill="#6f986a" d="m458 526 101-79 108-42 76-17 104 21 101 48 54 47-47-25-104-31-105-13-111 21-92 34z"/>
+    <path fill="#5d805e" d="m458 526 101-79 108-42-14 35-99 49-96 60z"/>
+    <path fill="url(#islandRock)" d="m458 526 74 27 101-18 107 12 92-5 111-20 59-38-16 88-84 69-44 93-110 39-95-29-81 22-68-73-71-37z"/>
+    <path fill="#34455b" d="m532 553 101-18 23 72-74 45-63-27zm101-18 107 12-14 83-70-23zm107 12 92-5 11 74-96-3zm92-5 111-20-16 75-96 19z"/>
+    <path fill="#8aa778" d="m565 450 25-27 19 8-13 31zm188-57 31-9 17 11-30 10z"/>
+  </g>
+  <!-- Small side islands echo the block-built maps. -->
+  <g opacity=".55">
+    <path fill="#526d5e" d="m70 706 48-41 60-18 57 15 43 34-40 23-74 9-61-5z"/>
+    <path fill="#202d43" d="m70 706 42 17 65-9 61-10 40-23-11 48-55 37-56-10-42 20-40-34z"/>
+    <path fill="#526d5e" d="m1110 764 52-44 67-22 66 18 59 38-55 31-73 8-70-8z"/>
+    <path fill="#202d43" d="m1110 764 54 21 62-8 73-8 55-31-17 62-55 32-66-11-53 18-43-37z"/>
+  </g>
+  <g opacity=".34" fill="#fb923c">
+    <path d="M616 588h10v10h-10zM744 548h10v10h-10zM852 552h10v10h-10z"/>
+    <path d="M515 570h10v10h-10zM940 501h10v10h-10z"/>
+  </g>
+</svg>
