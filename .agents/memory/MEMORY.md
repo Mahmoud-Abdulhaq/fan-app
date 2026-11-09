@@ -1,1 +1,2 @@
 - [BedWars content provenance](bedwars-content.md) — preserve the supplied Season 17 snapshot attribution; category ordering is not a complete letter-tier assignment.
+- [BedWars text contrast](bedwars-text-contrast.md) — keep the red-and-black theme readable; don't force all text to one dark-red color.

@@ -91,7 +91,7 @@ export default function Home() {
       </section>
 
       <div className="mt-10 grid gap-5 lg:grid-cols-3">
-        <KitList title="Trending" icon={<Flame className="h-5 w-5 text-orange-400" />} ids={dash.data?.trending ?? []} map={map} empty="Trending fills in as players rate kits." />
+        <KitList title="Trending" icon={<Flame className="h-5 w-5 text-red-400" />} ids={dash.data?.trending ?? []} map={map} empty="Trending fills in as players rate kits." />
         <KitList title="Top rated" icon={<Trophy className="h-5 w-5 text-yellow-300" />} ids={dash.data?.topRated ?? []} map={map} empty="No ratings yet. Be the first to rate a kit." />
         <TriviaCard />
       </div>

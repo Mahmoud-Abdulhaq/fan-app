@@ -5,22 +5,22 @@ export const CATEGORIES = ["Fighter", "Movement", "Support", "Economy", "Defende
 export type Category = (typeof CATEGORIES)[number];
 
 export const CATEGORY_STYLE: Record<Category, { chip: string; dot: string; text: string; bar: string }> = {
-  Fighter: { chip: "bg-red-500/15 text-red-300 border-red-500/40", dot: "bg-red-500", text: "text-red-300", bar: "bg-red-500" },
-  Movement: { chip: "bg-cyan-400/15 text-cyan-300 border-cyan-400/40", dot: "bg-cyan-400", text: "text-cyan-300", bar: "bg-cyan-400" },
-  Support: { chip: "bg-green-500/15 text-green-300 border-green-500/40", dot: "bg-green-500", text: "text-green-300", bar: "bg-green-500" },
-  Economy: { chip: "bg-yellow-400/15 text-yellow-200 border-yellow-400/40", dot: "bg-yellow-400", text: "text-yellow-200", bar: "bg-yellow-400" },
-  Defender: { chip: "bg-slate-400/15 text-slate-200 border-slate-400/40", dot: "bg-slate-400", text: "text-slate-200", bar: "bg-slate-400" },
-  Ranged: { chip: "bg-purple-500/15 text-purple-300 border-purple-500/40", dot: "bg-purple-500", text: "text-purple-300", bar: "bg-purple-500" },
+  Fighter: { chip: "bg-red-950/70 text-red-400 border-red-800/60", dot: "bg-red-500", text: "text-red-400", bar: "bg-red-500" },
+  Movement: { chip: "bg-black/70 text-red-400 border-red-900/70", dot: "bg-cyan-400", text: "text-red-400", bar: "bg-cyan-400" },
+  Support: { chip: "bg-black/70 text-red-400 border-red-900/70", dot: "bg-green-500", text: "text-red-400", bar: "bg-green-500" },
+  Economy: { chip: "bg-black/70 text-red-400 border-red-900/70", dot: "bg-yellow-400", text: "text-red-400", bar: "bg-yellow-400" },
+  Defender: { chip: "bg-black/70 text-red-400 border-red-900/70", dot: "bg-slate-400", text: "text-red-400", bar: "bg-slate-400" },
+  Ranged: { chip: "bg-black/70 text-red-400 border-red-900/70", dot: "bg-purple-500", text: "text-red-400", bar: "bg-purple-500" },
 };
 
 export const TIERS = ["S", "A", "B", "C", "D"] as const;
 export type Tier = (typeof TIERS)[number];
 export const TIER_STYLE: Record<Tier, string> = {
-  S: "bg-orange-400 text-slate-950",
-  A: "bg-amber-300/90 text-slate-950",
-  B: "bg-sky-400/80 text-slate-950",
-  C: "bg-slate-500 text-slate-50",
-  D: "bg-slate-700 text-slate-300",
+  S: "bg-red-950 text-red-400 border border-red-700",
+  A: "bg-red-950/80 text-red-400 border border-red-900",
+  B: "bg-neutral-950 text-red-400 border border-red-900/70",
+  C: "bg-neutral-950/80 text-red-400 border border-neutral-800",
+  D: "bg-black text-red-400 border border-neutral-900",
 };
 export const tierIndex = (t: string) => TIERS.indexOf(t as Tier);
 
@@ -30,6 +30,16 @@ export const TEAMS = [
   { id: "Yellow", swatch: "bg-yellow-400" },
   { id: "Orange", swatch: "bg-orange-500" },
   { id: "Pink", swatch: "bg-pink-400" },
+] as const;
+export const SOLO_DOUBLES_TEAMS = [
+  { id: "White", swatch: "bg-white" },
+  { id: "Blue", swatch: "bg-blue-500" },
+  { id: "Brown", swatch: "bg-amber-900" },
+  { id: "Yellow", swatch: "bg-yellow-400" },
+  { id: "Pink", swatch: "bg-pink-400" },
+  { id: "Cyan", swatch: "bg-cyan-400" },
+  { id: "Orange", swatch: "bg-orange-500" },
+  { id: "Purple", swatch: "bg-purple-500" },
 ] as const;
 
 export const SNAPSHOT_LABEL = "October 2026 snapshot (Season 17)";
@@ -69,6 +79,10 @@ function useLocal<T extends string>(key: string, initial: T) {
 
 export function usePrefs() {
   const [mode, setMode] = useLocal<string>("bw.mode", "Ranked 5v5");
-  const [team, setTeam] = useLocal<string>("bw.team", "Orange");
-  return { mode, setMode, team, setTeam };
+  const [storedTeam, setStoredTeam] = useLocal<string>("bw.team", "Orange");
+  const team = storedTeam === "Red" ? "White" : storedTeam === "Green" ? "Brown" : storedTeam;
+  useEffect(() => {
+    if (storedTeam !== team) setStoredTeam(team);
+  }, [storedTeam, team, setStoredTeam]);
+  return { mode, setMode, team, setTeam: setStoredTeam };
 }

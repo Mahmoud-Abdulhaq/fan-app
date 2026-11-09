@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useClerk, useUser, Show } from "@clerk/react";
 import { LayoutGrid, Shield, GitCompare, BookOpen, LogOut, Gauge } from "lucide-react";
-import { MODES, TEAMS, usePrefs, SNAPSHOT_LABEL } from "@/lib/bw";
+import { MODES, TEAMS, SOLO_DOUBLES_TEAMS, usePrefs, SNAPSHOT_LABEL } from "@/lib/bw";
 import { cn } from "@/lib/utils";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -15,19 +15,27 @@ const NAV = [
 ];
 
 const TEAM_RING: Record<string, string> = {
-  Blue: "ring-blue-500", Yellow: "ring-yellow-400", Orange: "ring-orange-500", Pink: "ring-pink-400",
+  White: "ring-white", Blue: "ring-blue-500", Brown: "ring-amber-800", Yellow: "ring-yellow-400",
+  Orange: "ring-orange-500", Pink: "ring-pink-400", Cyan: "ring-cyan-400", Purple: "ring-purple-500",
 };
 
 function Selectors() {
   const { mode, setMode, team, setTeam } = usePrefs();
+  const availableTeams = mode === "Solos" || mode === "Doubles" ? SOLO_DOUBLES_TEAMS : TEAMS;
   return (
     <div className="flex min-w-0 items-center gap-3">
-      <select value={mode} onChange={(e) => setMode(e.target.value)} data-testid="select-mode" aria-label="Game mode"
+      <select value={mode} onChange={(e) => {
+        const nextMode = e.target.value;
+        setMode(nextMode);
+        if (nextMode !== "Solos" && nextMode !== "Doubles" && !TEAMS.some((option) => option.id === team)) {
+          setTeam("Blue");
+        }
+      }} data-testid="select-mode" aria-label="Game mode"
         className="h-8 min-w-0 rounded-md border border-input bg-card px-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-ring">
         {MODES.map((m) => <option key={m} value={m}>{m}</option>)}
       </select>
-      <div className="flex items-center gap-1.5" role="radiogroup" aria-label="Team color">
-        {TEAMS.map((t) => (
+      <div className="flex items-center gap-1.5" role="radiogroup" aria-label={`${mode} team color`}>
+        {availableTeams.map((t) => (
           <button key={t.id} type="button" role="radio" aria-checked={team === t.id} title={`${t.id} team`}
             onClick={() => setTeam(t.id)} data-testid={`button-team-${t.id.toLowerCase()}`}
             className={cn("h-5 w-5 rounded-sm transition-transform hover:scale-110", t.swatch,
@@ -56,11 +64,10 @@ function UserChip() {
 
 export function Layout({ children }: { children: ReactNode }) {
   const [loc] = useLocation();
-  const { team } = usePrefs();
   const active = (h: string) => loc === h || loc.startsWith(h + "/");
   return (
     <div className="min-h-[100dvh] pb-20 md:pb-0">
-      <div className={cn("h-1", TEAMS.find((t) => t.id === team)?.swatch)} />
+      <div className="h-1 bg-gradient-to-r from-red-950 via-red-600 to-red-950" />
       <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4">
           <Link href="/" className="flex items-center gap-2 shrink-0" data-testid="link-home">

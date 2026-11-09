@@ -23,9 +23,15 @@ const SWORDS = [
   ["Iron Sword", "70 Iron", "A stronger shop upgrade using iron."],
   ["Diamond Sword", "4 Emeralds", "A high-tier shop upgrade."],
   ["Emerald Sword", "20 Emeralds", "The top sword in the standard shop progression."],
-  ["Void Sword", "10 Void Crystals", "A separate, mode-dependent sword; not part of every match's normal shop path."],
+];
+const ARMOR = [
+  ["Leather Armor", "50 Iron", "First armor upgrade from the Item Shop."],
+  ["Iron Armor", "120 Iron", "Stronger armor bought with iron."],
+  ["Diamond Armor", "8 Emeralds", "High-tier protection bought with emeralds."],
+  ["Emerald Armor", "40 Emeralds", "Top standard Item Shop armor tier."],
 ];
 const SWORD_SOURCE = "https://robloxbedwars.fandom.com/wiki/Sword";
+const ARMOR_SOURCE = "https://robloxbedwars.fandom.com/wiki/Armor";
 const DRAFT = [
   ["Economy engine", "Bounty Hunter or Milo"], ["Primary carry", "Grim Reaper, Hannah or Aery"], ["Flex disrupter", "Void Regent or Jade"],
   ["Support buffer", "Baker or Whisper, tethered to the carry"], ["Ranged / defense", "Archer or Trapper"],
@@ -58,7 +64,7 @@ function Block({ title, children }: { title: string; children: ReactNode }) {
 }
 
 export default function Guide() {
-  usePageMeta("How to play BedWars", "A quick guide to BedWars objectives, resources, swords, team strategy and kit picks.");
+  usePageMeta("How to play BedWars", "A quick guide to BedWars objectives, swords, armor, resources, team strategy and kit picks.");
   return (
     <div>
       <PageHeader eyebrow="Field guide" title="How to play BedWars">Protect your bed, build up your gear, and take fights with a plan.</PageHeader>
@@ -75,7 +81,7 @@ export default function Guide() {
       </div>
       <div className="grid gap-5 lg:grid-cols-2">
         <Block title="Swords and shop upgrades">
-          <p className="mb-3 text-sm text-muted-foreground">Standard Item Shop progression and the separate Void Sword, as listed by the BedWars Wiki. Costs and availability can vary with game modes or updates.</p>
+          <p className="mb-3 text-sm text-muted-foreground">Standard Item Shop sword progression, as listed by the BedWars Wiki. Costs and availability can vary with game modes or updates.</p>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead><tr className="border-b border-border text-xs uppercase text-muted-foreground"><th className="py-2 pr-3">Sword</th><th className="py-2 pr-3">Cost</th><th className="py-2">Notes</th></tr></thead>
@@ -84,6 +90,16 @@ export default function Guide() {
           </div>
           <p className="mt-3 text-sm text-muted-foreground">Other named swords include the Rageblade, Dao, Big Wooden Sword, and Ice Sword. These are not standard shop upgrades; availability depends on the kit, mode, or current game events.</p>
           <a href={SWORD_SOURCE} target="_blank" rel="noreferrer" className="mt-2 inline-block text-sm font-semibold text-primary hover:underline">Check the BedWars Wiki sword page for updates</a>
+        </Block>
+        <Block title="Armor and shop upgrades">
+          <p className="mb-3 text-sm text-muted-foreground">Standard armor tiers and shop costs. Armor automatically replaces your current set when purchased.</p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead><tr className="border-b border-border text-xs uppercase text-muted-foreground"><th className="py-2 pr-3">Armor</th><th className="py-2 pr-3">Cost</th><th className="py-2">Notes</th></tr></thead>
+              <tbody>{ARMOR.map(([name, cost, note]) => <tr key={name} className="border-b border-border/60 last:border-0"><th scope="row" className="py-2 pr-3 font-semibold">{name}</th><td className="py-2 pr-3 whitespace-nowrap">{cost}</td><td className="py-2 text-muted-foreground">{note}</td></tr>)}</tbody>
+            </table>
+          </div>
+          <a href={ARMOR_SOURCE} target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm font-semibold text-primary hover:underline">Check the BedWars Wiki armor page for updates</a>
         </Block>
         <Block title="Core mechanics">
           <dl className="space-y-3 text-sm">{MECHANICS.map(([t, d]) => <div key={t}><dt className="font-semibold text-primary">{t}</dt><dd className="text-foreground/85">{d}</dd></div>)}</dl>
