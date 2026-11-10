@@ -3,7 +3,7 @@ import { Link, useParams } from "wouter";
 import { ArrowLeft, GitCompare, Pencil, Trash2, Swords, ShieldAlert } from "lucide-react";
 import { useCreateNote, useDeleteNote, useUpdateNote, type Kit } from "@workspace/api-client-react";
 import { useKits, usePageMeta } from "@/lib/bw";
-import { CategoryBadge, ErrorState, FavoriteButton, KitCard, RatingReadout, SignInPrompt, SnapshotNote, StarRater, TierBadge } from "@/components/bw";
+import { CategoryBadge, ErrorState, FavoriteButton, KitCard, KitName, RatingReadout, SignInPrompt, SnapshotNote, StarRater, TierBadge } from "@/components/bw";
 import { useInvalidate, useProfile } from "@/hooks/use-personal";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -106,7 +106,7 @@ export default function KitDetail() {
         <div className="flex flex-wrap items-start gap-5">
           <TierBadge tier={kit.tier} size="lg" />
           <div className="min-w-0 flex-1">
-            <h1 className="text-4xl font-bold sm:text-5xl" data-testid="text-kit-name">{kit.name}</h1>
+            <h1 className="text-4xl font-bold sm:text-5xl" data-testid="text-kit-name"><KitName kit={kit} /></h1>
             <div className="mt-2 flex flex-wrap items-center gap-3">
               <CategoryBadge category={kit.category} />
               <span className="font-mono text-xs text-muted-foreground">#{kit.rank} of 5 in {kit.category}</span>
@@ -128,19 +128,19 @@ export default function KitDetail() {
       <div className="mt-6 grid gap-5 lg:grid-cols-[1.3fr_1fr]">
         <section className="rounded-lg border border-card-border bg-card p-5">
           <h2 className="flex items-center gap-2 text-lg font-bold"><Swords className="h-5 w-5 text-green-400" />Counter relationships</h2>
-          <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Picks that beat {kit.name}</p>
+          <p className="mt-3 flex flex-wrap items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Picks that beat <KitName kit={kit} /></p>
           <div className="mt-2 flex flex-wrap gap-2">
             {counters.length ? counters.map((c) => (
               <Link key={c.id} href={`/kits/${c.id}`} data-testid={`link-counter-${c.id}`} className="inline-flex items-center gap-2 rounded-md border border-green-500/40 bg-green-500/10 px-2.5 py-1.5 text-sm font-semibold text-green-200 hover:border-green-400">
-                <TierBadge tier={c.tier} />{c.name}
+                <TierBadge tier={c.tier} /><KitName kit={c} />
               </Link>
             )) : <span className="text-sm text-muted-foreground">No listed counters.</span>}
           </div>
-          <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{kit.name} counters</p>
+          <p className="mt-4 flex flex-wrap items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground"><KitName kit={kit} /> counters</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {countersOf.length ? countersOf.map((c) => (
               <Link key={c.id} href={`/kits/${c.id}`} data-testid={`link-countered-${c.id}`} className="inline-flex items-center gap-2 rounded-md border border-red-500/40 bg-red-500/10 px-2.5 py-1.5 text-sm font-semibold text-red-200 hover:border-red-400">
-                <ShieldAlert className="h-4 w-4" />{c.name}
+                <ShieldAlert className="h-4 w-4" /><KitName kit={c} />
               </Link>
             )) : <span className="text-sm text-muted-foreground">Not listed as a counter for any kit.</span>}
           </div>

@@ -44,7 +44,7 @@ export const SOLO_DOUBLES_TEAMS = [
 
 export const SNAPSHOT_LABEL = "October 2026 snapshot (Season 17)";
 export const ATTRIBUTION =
-  "Kit data is from a user-supplied BedWars Master Specification (community tier lists and patch history). It has not been independently verified against the live game. Re-verify after each balance patch.";
+  "Kit descriptions are from the user-supplied BedWars Master Specification. Category ranks are user-directed; grades derive from rank (1 = S, 2 = A, 3 = B, 4 = C, 5 = D). Not independently verified against the live game.";
 
 export function useKits() {
   const q = useListKits();

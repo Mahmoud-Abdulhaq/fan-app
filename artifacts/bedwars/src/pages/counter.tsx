@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Search, X, AlertTriangle, ShieldCheck } from "lucide-react";
 import { useGetCounters, type Counter } from "@workspace/api-client-react";
 import { useKits, usePageMeta, CATEGORIES, CATEGORY_STYLE, type Category } from "@/lib/bw";
-import { CategoryBadge, ErrorState, PageHeader, SnapshotNote, TierBadge } from "@/components/bw";
+import { CategoryBadge, ErrorState, KitName, PageHeader, SnapshotNote, TierBadge } from "@/components/bw";
 import { cn } from "@/lib/utils";
 
 const MAX = 4;
@@ -46,7 +46,7 @@ export default function CounterPage() {
             {selected.length === 0 ? <span className="px-1 py-1.5 text-sm text-muted-foreground">No enemies picked</span> : selected.map((id) => (
               <button key={id} type="button" onClick={() => toggle(id)} data-testid={`button-remove-enemy-${id}`}
                 className="rise inline-flex items-center gap-1 rounded-md border border-red-500/50 bg-red-500/10 px-2 py-1 text-sm font-semibold text-red-200">
-                {map.get(id)?.name}<X className="h-3.5 w-3.5" />
+                {map.get(id) ? <KitName kit={map.get(id)!} /> : id}<X className="h-3.5 w-3.5" />
               </button>
             ))}
             {selected.length > 0 && <button type="button" onClick={() => setSelected([])} className="ml-auto text-xs font-semibold text-primary" data-testid="button-clear-enemies">Clear</button>}
@@ -76,7 +76,7 @@ export default function CounterPage() {
                           <button key={k.id} type="button" onClick={() => toggle(k.id)} aria-pressed={on} data-testid={`button-enemy-${k.id}`}
                             className={cn("flex min-w-0 items-center gap-2 rounded-md border px-2 py-2 text-left text-sm font-semibold transition-all active:scale-95",
                               on ? "border-red-500/70 bg-red-500/15 text-red-100" : "border-border bg-card hover:border-primary/50")}>
-                            <TierBadge tier={k.tier} /><span className="truncate">{k.name}</span>
+                            <TierBadge tier={k.tier} /><KitName kit={k} className="truncate" />
                           </button>
                         );
                       })}
@@ -109,7 +109,7 @@ export default function CounterPage() {
                   <article key={r.enemyId} className="rise rounded-lg border border-card-border bg-card p-4" data-testid={`card-counter-${r.enemyId}`}>
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xs text-muted-foreground">vs</span>
-                      <h3 className="text-lg font-bold">{enemy?.name ?? r.enemyId}</h3>
+                      <h3 className="text-lg font-bold">{enemy ? <KitName kit={enemy} /> : r.enemyId}</h3>
                       {enemy && <CategoryBadge category={enemy.category} />}
                       {r.highThreat && <span className="inline-flex items-center gap-1 rounded-sm bg-red-500 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white" data-testid={`tag-high-threat-${r.enemyId}`}><AlertTriangle className="h-3 w-3" />High Threat</span>}
                     </div>
@@ -119,7 +119,7 @@ export default function CounterPage() {
                         return (
                           <Link key={cid} href={`/kits/${cid}`} data-testid={`link-rec-${r.enemyId}-${cid}`}
                             className="inline-flex items-center gap-2 rounded-md border border-green-500/40 bg-green-500/10 px-2 py-1.5 text-sm font-semibold hover:border-green-400">
-                            {ck && <TierBadge tier={ck.tier} />}{ck?.name ?? cid}
+                            {ck && <TierBadge tier={ck.tier} />}{ck ? <KitName kit={ck} /> : cid}
                             {i === 0 && <span className="rounded-sm bg-green-500 px-1.5 py-0.5 text-[10px] font-bold uppercase text-slate-950">Strong Counter</span>}
                           </Link>
                         );

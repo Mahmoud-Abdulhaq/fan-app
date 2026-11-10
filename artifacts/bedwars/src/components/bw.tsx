@@ -31,6 +31,19 @@ export function TierBadge({ tier, size = "sm" }: { tier: string; size?: "sm" | "
   );
 }
 
+export function KitName({ kit, className }: { kit: Pick<Kit, "name" | "tier">; className?: string }) {
+  return (
+    <span className={cn("inline-flex min-w-0 items-center gap-1.5", className)}>
+      <span className="truncate">{kit.name}</span>
+      {kit.tier === "S" && (
+        <span role="img" aria-label="S-tier" title="S-tier" className="inline-flex shrink-0">
+          <Star className="h-4 w-4 fill-current text-primary" aria-hidden="true" />
+        </span>
+      )}
+    </span>
+  );
+}
+
 export function RatingReadout({ kit }: { kit: Kit }) {
   return (
     <span className="inline-flex items-center gap-1 font-mono text-xs text-muted-foreground">
@@ -129,7 +142,7 @@ export function KitCard({ kit, index = 0, action }: { kit: Kit; index?: number; 
         <span className={cn("absolute left-0 top-3 bottom-3 w-1 rounded-r", s?.bar)} />
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="truncate text-lg font-bold" data-testid={`text-kit-name-${kit.id}`}>{kit.name}</h3>
+            <h3 className="truncate text-lg font-bold" data-testid={`text-kit-name-${kit.id}`}><KitName kit={kit} /></h3>
             <CategoryBadge category={kit.category} className="mt-1" />
           </div>
           <TierBadge tier={kit.tier} />

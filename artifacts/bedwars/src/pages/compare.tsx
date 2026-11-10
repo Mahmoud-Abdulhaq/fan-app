@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { ArrowLeftRight } from "lucide-react";
 import type { Kit } from "@workspace/api-client-react";
 import { useKits, usePageMeta, tierIndex } from "@/lib/bw";
-import { CategoryBadge, ErrorState, PageHeader, RatingReadout, SnapshotNote, TierBadge } from "@/components/bw";
+import { CategoryBadge, ErrorState, KitName, PageHeader, RatingReadout, SnapshotNote, TierBadge } from "@/components/bw";
 import { cn } from "@/lib/utils";
 
 function Picker({ value, onChange, kits, label, testid }: { value: string; onChange: (v: string) => void; kits: Kit[]; label: string; testid: string }) {
@@ -13,7 +13,7 @@ function Picker({ value, onChange, kits, label, testid }: { value: string; onCha
       <select value={value} onChange={(e) => onChange(e.target.value)} data-testid={testid}
         className="mt-1 h-11 w-full rounded-md border border-input bg-card px-3 font-semibold focus:outline-none focus:ring-2 focus:ring-ring">
         <option value="">Choose a kit</option>
-        {[...kits].sort((a, b) => a.name.localeCompare(b.name)).map((k) => <option key={k.id} value={k.id}>{k.name}</option>)}
+        {[...kits].sort((a, b) => a.name.localeCompare(b.name)).map((k) => <option key={k.id} value={k.id}>{k.tier === "S" ? "★ " : ""}{k.name}</option>)}
       </select>
     </label>
   );
@@ -27,18 +27,21 @@ function Side({ kit, other, map }: { kit: Kit; other: Kit; map: Map<string, Kit>
     <div className="rise min-w-0 rounded-lg border border-card-border bg-card p-5" data-testid={`compare-side-${kit.id}`}>
       <div className="flex items-center gap-3">
         <TierBadge tier={kit.tier} size="lg" />
-        <div className="min-w-0"><Link href={`/kits/${kit.id}`} className="block truncate text-2xl font-bold hover:text-primary">{kit.name}</Link><CategoryBadge category={kit.category} className="mt-1" /></div>
+        <div className="min-w-0"><Link href={`/kits/${kit.id}`} className="block truncate text-2xl font-bold hover:text-primary"><KitName kit={kit} /></Link><CategoryBadge category={kit.category} className="mt-1" /></div>
       </div>
       {better && <p className="mt-3 inline-block rounded-sm bg-primary/15 px-2 py-0.5 text-xs font-bold text-primary">Higher tier</p>}
-      {countersOther && <p className="mt-3 inline-block rounded-sm bg-green-500/15 px-2 py-0.5 text-xs font-bold text-green-300">Recommended counter to {other.name}</p>}
-      {counteredByOther && <p className="mt-3 ml-2 inline-block rounded-sm bg-red-500/15 px-2 py-0.5 text-xs font-bold text-red-300">Countered by {other.name}</p>}
+      {countersOther && <p className="mt-3 inline-flex items-center gap-1 rounded-sm bg-green-500/15 px-2 py-0.5 text-xs font-bold text-green-300">Recommended counter to <KitName kit={other} /></p>}
+      {counteredByOther && <p className="mt-3 ml-2 inline-flex items-center gap-1 rounded-sm bg-red-500/15 px-2 py-0.5 text-xs font-bold text-red-300">Countered by <KitName kit={other} /></p>}
       <dl className="mt-4 space-y-3 text-sm">
         <div><dt className="font-mono text-xs uppercase text-primary">Ability</dt><dd>{kit.ability}</dd></div>
         <div><dt className="font-mono text-xs uppercase text-primary">Strategy</dt><dd className="text-foreground/85">{kit.strategy}</dd></div>
         <div><dt className="font-mono text-xs uppercase text-primary">Category rank</dt><dd>#{kit.rank} in {kit.category}</dd></div>
         <div><dt className="font-mono text-xs uppercase text-primary">Player rating</dt><dd><RatingReadout kit={kit} /></dd></div>
         <div><dt className="font-mono text-xs uppercase text-primary">Recommended counter picks</dt>
-          <dd className="mt-1 flex flex-wrap gap-1">{kit.counters.map((c) => <span key={c} className={cn("rounded px-2 py-0.5 text-xs font-semibold", c === other.id ? "bg-green-500/20 text-green-200" : "bg-muted")}>{map.get(c)?.name ?? c}</span>)}</dd>
+          <dd className="mt-1 flex flex-wrap gap-1">{kit.counters.map((c) => {
+            const counter = map.get(c);
+            return <span key={c} className={cn("rounded px-2 py-0.5 text-xs font-semibold", c === other.id ? "bg-green-500/20 text-green-200" : "bg-muted")}>{counter ? <KitName kit={counter} /> : c}</span>;
+          })}</dd>
         </div>
       </dl>
     </div>

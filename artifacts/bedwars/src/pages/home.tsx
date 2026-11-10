@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { ArrowRight, Flame, Trophy, Crown } from "lucide-react";
 import { useGetDashboard, type Kit } from "@workspace/api-client-react";
 import { useKits, usePageMeta, usePrefs, CATEGORY_STYLE, type Category } from "@/lib/bw";
-import { CategoryBadge, ErrorState, KitCard, KitGridSkeleton, RatingReadout, SnapshotNote, TierBadge } from "@/components/bw";
+import { CategoryBadge, ErrorState, KitCard, KitGridSkeleton, KitName, RatingReadout, SnapshotNote, TierBadge } from "@/components/bw";
 import { TriviaCard } from "@/components/trivia";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +16,7 @@ export function FeaturedKit({ kit }: { kit: Kit }) {
       <div className="mt-3 flex items-center gap-4">
         <TierBadge tier={kit.tier} size="lg" />
         <div className="min-w-0">
-          <h2 className="truncate text-3xl font-bold sm:text-4xl">{kit.name}</h2>
+          <h2 className="truncate text-3xl font-bold sm:text-4xl"><KitName kit={kit} /></h2>
           <div className="mt-1 flex flex-wrap items-center gap-2"><CategoryBadge category={kit.category} /><RatingReadout kit={kit} /></div>
         </div>
       </div>
@@ -39,7 +39,7 @@ export function KitList({ title, icon, ids, map, empty }: { title: string; icon:
               <Link href={`/kits/${k.id}`} data-testid={`link-list-kit-${k.id}`} className="flex items-center gap-3 py-2.5 transition-colors hover:text-primary">
                 <span className="w-5 font-mono text-xs text-muted-foreground">{i + 1}</span>
                 <TierBadge tier={k.tier} />
-                <span className="min-w-0 flex-1 truncate font-semibold">{k.name}</span>
+                <KitName kit={k} className="min-w-0 flex-1 truncate font-semibold" />
                 <RatingReadout kit={k} />
               </Link>
             </li>

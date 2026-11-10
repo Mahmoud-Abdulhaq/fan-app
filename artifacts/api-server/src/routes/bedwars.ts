@@ -39,7 +39,7 @@ router.get("/dashboard", async (_req, res): Promise<void> => {
     trending: all.filter(k => k.ratingCount > 0).sort((a, b) => b.ratingCount - a.ratingCount || b.averageRating - a.averageRating).slice(0, 5).map(k => k.id),
     topRated: rated.slice(0, 5).map(k => k.id),
     totalRatings: all.reduce((s, k) => s + k.ratingCount, 0),
-    snapshot: "Season 17 · October 2026 · Supplied specification, not independently verified. Letter tiers are editorial assignments where the document gives only ordered category ranks.",
+    snapshot: "Season 17 · October 2026 · Kit descriptions from supplied specification; category ranks are user-directed and grades derive from rank (1=S through 5=D). Not independently verified.",
   }));
 });
 router.post("/counters", async (req, res): Promise<void> => {
