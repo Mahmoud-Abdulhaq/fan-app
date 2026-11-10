@@ -5,6 +5,7 @@ import { shadcn } from "@clerk/themes";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { Route, Switch, Redirect, useLocation, Router as WouterRouter } from "wouter";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { BedBreakAnimation } from "@/components/bed-break-animation";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
@@ -101,6 +102,7 @@ function SignInPage() {
   usePageMeta("Sign in", "Sign in to save favorites, ratings, and notes.");
   return (
     <AuthShell>
+      <BedBreakAnimation />
       <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} />
     </AuthShell>
   );
