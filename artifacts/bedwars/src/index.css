@@ -182,10 +182,17 @@ body::after {
   position: absolute; inset: 0; pointer-events: none; opacity: .12;
   background: repeating-linear-gradient(to bottom, transparent 0 4px, #000 5px 6px);
 }
-.bed-intact { transform-origin: 100px 90px; animation: bed-hit 2.2s steps(1, end) both; }
-.axe-swing { transform-box: view-box; transform-origin: 131px 58px; animation: axe-swing 2.2s steps(8, end) both; }
-.bed-crack { opacity: 0; animation: bed-crack-flash 2.2s steps(1, end) both; }
-.bed-fragment { opacity: 0; animation: bed-pixel-pop 2.2s steps(5, end) both; }
+.bed-intact { transform-origin: 100px 90px; animation: bed-hit 3.8s steps(1, end) both; }
+.axe-swing { transform-box: view-box; transform-origin: 131px 58px; animation: axe-swing 3.8s cubic-bezier(.2, .72, .25, 1) both; }
+.bed-crack { opacity: 0; }
+.bed-crack-one { animation: crack-one 3.8s steps(1, end) both; }
+.bed-crack-two { animation: crack-two 3.8s steps(1, end) both; }
+.bed-crack-three { animation: crack-three 3.8s steps(1, end) both; }
+.strike-dust { opacity: 0; }
+.strike-dust-one { animation: dust-one 3.8s steps(1, end) both; }
+.strike-dust-two { animation: dust-two 3.8s steps(1, end) both; }
+.strike-dust-three { animation: dust-three 3.8s steps(1, end) both; }
+.bed-fragment { opacity: 0; animation: bed-pixel-pop 3.8s steps(5, end) both; }
 .bed-fragment-one { --pixel-dx: -27px; --pixel-dy: -25px; }
 .bed-fragment-two { --pixel-dx: 8px; --pixel-dy: -35px; }
 .bed-fragment-three { --pixel-dx: 28px; --pixel-dy: -21px; }
@@ -195,42 +202,81 @@ body::after {
 .bed-break-caption {
   margin-top: .55rem; color: #B22222; font-family: 'JetBrains Mono', monospace;
   font-size: .65rem; font-weight: 700; letter-spacing: .24em;
-  opacity: 0; animation: bed-caption 2.2s steps(1, end) both;
+  opacity: 0; animation: bed-caption 3.8s steps(1, end) both;
 }
 @keyframes bed-hit {
-  0%, 78% { opacity: 1; transform: translateX(0); }
-  81% { transform: translateX(-3px); }
-  84% { opacity: .65; transform: translateX(3px); }
-  89%, 100% { opacity: 0; transform: translateY(4px); }
+  0%, 19%, 45%, 70% { opacity: 1; transform: translateX(0); }
+  20%, 46%, 71% { transform: translateX(-3px); }
+  21%, 47%, 72% { transform: translateX(3px); }
+  22%, 48%, 73%, 78% { opacity: 1; transform: translateX(0); }
+  82%, 100% { opacity: 0; transform: translateY(4px); }
 }
 @keyframes axe-swing {
-  0%, 18% { transform: rotate(38deg); }
-  30% { transform: rotate(54deg); }
+  0%, 3% { transform: rotate(38deg); }
+  9% { transform: rotate(57deg); }
+  16% { transform: rotate(34deg); }
+  20% { transform: rotate(-47deg); }
+  22% { transform: rotate(-72deg); }
+  25% { transform: rotate(-58deg); }
+  29% { transform: rotate(-8deg); }
+  33% { transform: rotate(39deg); }
+  37% { transform: rotate(58deg); }
   42% { transform: rotate(34deg); }
-  57% { transform: rotate(56deg); }
-  68% { transform: rotate(31deg); }
-  90% { transform: rotate(-68deg); }
-  94% { transform: rotate(-74deg); }
-  100% { transform: rotate(-12deg); }
+  46% { transform: rotate(-48deg); }
+  48% { transform: rotate(-73deg); }
+  51% { transform: rotate(-59deg); }
+  55% { transform: rotate(-8deg); }
+  59% { transform: rotate(39deg); }
+  63% { transform: rotate(58deg); }
+  68% { transform: rotate(34deg); }
+  71% { transform: rotate(-48deg); }
+  73% { transform: rotate(-75deg); }
+  76% { transform: rotate(-60deg); }
+  80%, 100% { transform: rotate(-12deg); }
 }
-@keyframes bed-crack-flash {
-  0%, 83%, 100% { opacity: 0; }
-  85%, 90% { opacity: 1; }
+@keyframes crack-one {
+  0%, 21% { opacity: 0; }
+  23%, 100% { opacity: 1; }
+}
+@keyframes crack-two {
+  0%, 47% { opacity: 0; }
+  49%, 100% { opacity: 1; }
+}
+@keyframes crack-three {
+  0%, 72% { opacity: 0; }
+  74%, 81% { opacity: 1; }
+  82%, 100% { opacity: 0; }
+}
+@keyframes dust-one {
+  0%, 21%, 28%, 100% { opacity: 0; transform: translateY(0); }
+  23% { opacity: 1; }
+  27% { opacity: 0; transform: translateY(-6px); }
+}
+@keyframes dust-two {
+  0%, 47%, 54%, 100% { opacity: 0; transform: translateY(0); }
+  49% { opacity: 1; }
+  53% { opacity: 0; transform: translateY(-7px); }
+}
+@keyframes dust-three {
+  0%, 72%, 82%, 100% { opacity: 0; transform: translateY(0); }
+  74% { opacity: 1; }
+  81% { opacity: 0; transform: translateY(-10px); }
 }
 @keyframes bed-pixel-pop {
-  0%, 87%, 100% { opacity: 0; transform: translate(0, 0); }
-  90% { opacity: 1; transform: translate(0, 0); }
+  0%, 80%, 100% { opacity: 0; transform: translate(0, 0); }
+  84% { opacity: 1; transform: translate(0, 0); }
   100% { opacity: 1; transform: translate(var(--pixel-dx), var(--pixel-dy)); }
 }
 @keyframes bed-caption {
-  0%, 89%, 100% { opacity: 0; transform: translateY(4px); }
-  93%, 100% { opacity: 1; transform: translateY(0); }
+  0%, 81% { opacity: 0; transform: translateY(4px); }
+  86%, 100% { opacity: 1; transform: translateY(0); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .bed-intact, .axe-swing, .bed-crack, .bed-fragment, .bed-break-caption { animation: none; }
+  .bed-intact, .axe-swing, .bed-crack, .strike-dust, .bed-fragment, .bed-break-caption { animation: none; }
   .bed-intact { opacity: 0; transform: none; }
   .axe-swing { opacity: 0; transform: none; }
-  .bed-crack { opacity: 1; }
+  .bed-crack-one, .bed-crack-two, .bed-crack-three { opacity: 1; }
+  .strike-dust { opacity: 0; }
   .bed-fragment { opacity: 1; transform: none; }
   .bed-break-caption { opacity: 1; transform: none; }
 }

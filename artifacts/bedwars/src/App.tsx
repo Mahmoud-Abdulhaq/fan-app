@@ -123,7 +123,7 @@ function BedBreakEntryPage() {
       return;
     }
 
-    const timeout = window.setTimeout(() => setLocation("/", { replace: true }), 2500);
+    const timeout = window.setTimeout(() => setLocation("/", { replace: true }), 4200);
     return () => window.clearTimeout(timeout);
   }, [isLoaded, isSignedIn, setLocation]);
 

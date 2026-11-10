@@ -21,15 +21,60 @@ export function BedBreakAnimation() {
             <rect x="54" y="81" width="111" height="9" fill="#4b2023" />
             <rect x="63" y="90" width="8" height="9" fill="#241214" />
             <rect x="149" y="90" width="8" height="9" fill="#241214" />
+            <g className="bed-crack bed-crack-one">
+              <rect x="102" y="55" width="5" height="5" fill="#f0b6ad" />
+              <rect x="98" y="60" width="5" height="4" fill="#f0b6ad" />
+              <rect x="103" y="64" width="5" height="4" fill="#f0b6ad" />
+              <rect x="99" y="68" width="5" height="5" fill="#f0b6ad" />
+              <rect x="104" y="73" width="5" height="5" fill="#f0b6ad" />
+              <rect x="109" y="77" width="5" height="4" fill="#f0b6ad" />
+              <rect x="93" y="60" width="5" height="4" fill="#f0b6ad" />
+            </g>
+            <g className="bed-crack bed-crack-two">
+              <rect x="134" y="55" width="5" height="5" fill="#f0b6ad" />
+              <rect x="130" y="60" width="5" height="4" fill="#f0b6ad" />
+              <rect x="125" y="64" width="5" height="5" fill="#f0b6ad" />
+              <rect x="129" y="69" width="5" height="4" fill="#f0b6ad" />
+              <rect x="124" y="73" width="5" height="5" fill="#f0b6ad" />
+              <rect x="119" y="77" width="5" height="4" fill="#f0b6ad" />
+              <rect x="135" y="60" width="5" height="4" fill="#f0b6ad" />
+            </g>
+            <g className="bed-crack bed-crack-three">
+              <rect x="77" y="55" width="5" height="5" fill="#f0b6ad" />
+              <rect x="81" y="60" width="5" height="4" fill="#f0b6ad" />
+              <rect x="86" y="64" width="5" height="5" fill="#f0b6ad" />
+              <rect x="82" y="69" width="5" height="4" fill="#f0b6ad" />
+              <rect x="87" y="73" width="5" height="5" fill="#f0b6ad" />
+              <rect x="92" y="77" width="5" height="4" fill="#f0b6ad" />
+            </g>
+            <g className="strike-dust strike-dust-one">
+              <rect x="94" y="48" width="5" height="5" fill="#f0b6ad" />
+              <rect x="109" y="47" width="4" height="4" fill="#c52b37" />
+              <rect x="114" y="55" width="4" height="4" fill="#f0b6ad" />
+            </g>
+            <g className="strike-dust strike-dust-two">
+              <rect x="126" y="49" width="5" height="5" fill="#f0b6ad" />
+              <rect x="140" y="57" width="4" height="4" fill="#c52b37" />
+              <rect x="121" y="52" width="4" height="4" fill="#f0b6ad" />
+            </g>
+            <g className="strike-dust strike-dust-three">
+              <rect x="99" y="45" width="5" height="5" fill="#f0b6ad" />
+              <rect x="117" y="45" width="5" height="5" fill="#c52b37" />
+              <rect x="138" y="49" width="5" height="5" fill="#f0b6ad" />
+              <rect x="92" y="54" width="4" height="4" fill="#c52b37" />
+            </g>
           </g>
 
-          <path className="bed-crack" d="M104 55L97 65L105 69L98 80L108 87M97 65L88 61M105 69L116 64M98 80L88 84" fill="none" stroke="#f0b6ad" strokeWidth="3" />
           <g className="axe-swing">
-            <rect x="128" y="20" width="6" height="39" fill="#895530" />
-            <rect x="120" y="17" width="18" height="8" fill="#d8cdc6" />
-            <rect x="118" y="19" width="5" height="5" fill="#aab2bd" />
-            <rect x="136" y="18" width="4" height="6" fill="#aab2bd" />
-            <rect x="129" y="29" width="4" height="23" fill="#a86c3d" />
+            <rect x="128" y="21" width="7" height="39" fill="#4b2b17" />
+            <rect x="130" y="23" width="3" height="34" fill="#a86c3d" />
+            <rect x="120" y="13" width="14" height="5" fill="#4b2b17" />
+            <rect x="115" y="18" width="21" height="5" fill="#754822" />
+            <rect x="112" y="23" width="24" height="7" fill="#895530" />
+            <rect x="115" y="30" width="18" height="5" fill="#68401f" />
+            <rect x="112" y="23" width="5" height="7" fill="#a86c3d" />
+            <rect x="122" y="19" width="8" height="4" fill="#a86c3d" />
+            <rect x="125" y="25" width="8" height="5" fill="#9a6639" />
           </g>
 
           <g>
