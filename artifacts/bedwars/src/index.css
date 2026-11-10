@@ -172,7 +172,7 @@ body::after {
 .cl-formButtonPrimary:hover { filter: brightness(1.08); }
 .cl-socialButtonsBlockButton:hover { background: hsl(217 33% 22%) !important; }
 
-.bed-break-scene { width: min(100%, 15rem); margin: 0; text-align: center; }
+.bed-break-scene { width: min(100%, 20rem); margin: 0; text-align: center; }
 .bed-break-window {
   position: relative; overflow: hidden; border: 1px solid hsl(350 34% 24%);
   border-radius: .65rem; background: #0b0809; box-shadow: 0 12px 30px #0008, 0 0 28px #7f1d1d18;
@@ -182,9 +182,10 @@ body::after {
   position: absolute; inset: 0; pointer-events: none; opacity: .12;
   background: repeating-linear-gradient(to bottom, transparent 0 4px, #000 5px 6px);
 }
-.bed-intact { transform-origin: 100px 90px; animation: bed-hit 4.6s steps(1, end) infinite; }
-.bed-crack { opacity: 0; animation: bed-crack-flash 4.6s steps(1, end) infinite; }
-.bed-fragment { opacity: 0; animation: bed-pixel-pop 4.6s steps(5, end) infinite; }
+.bed-intact { transform-origin: 100px 90px; animation: bed-hit 2.2s steps(1, end) both; }
+.axe-swing { transform-box: view-box; transform-origin: 131px 58px; animation: axe-swing 2.2s steps(8, end) both; }
+.bed-crack { opacity: 0; animation: bed-crack-flash 2.2s steps(1, end) both; }
+.bed-fragment { opacity: 0; animation: bed-pixel-pop 2.2s steps(5, end) both; }
 .bed-fragment-one { --pixel-dx: -27px; --pixel-dy: -25px; }
 .bed-fragment-two { --pixel-dx: 8px; --pixel-dy: -35px; }
 .bed-fragment-three { --pixel-dx: 28px; --pixel-dy: -21px; }
@@ -194,35 +195,44 @@ body::after {
 .bed-break-caption {
   margin-top: .55rem; color: #B22222; font-family: 'JetBrains Mono', monospace;
   font-size: .65rem; font-weight: 700; letter-spacing: .24em;
-  opacity: 0; animation: bed-caption 4.6s steps(1, end) infinite;
+  opacity: 0; animation: bed-caption 2.2s steps(1, end) both;
 }
 @keyframes bed-hit {
-  0%, 13%, 84%, 100% { opacity: 1; transform: translateX(0); }
-  15% { transform: translateX(-3px); }
-  17% { transform: translateX(3px); }
-  19% { transform: translateX(-2px); }
-  21%, 24% { opacity: .7; transform: translateX(0); }
-  30%, 72% { opacity: 0; transform: translateY(4px); }
-  80% { opacity: .2; transform: translateY(0); }
+  0%, 78% { opacity: 1; transform: translateX(0); }
+  81% { transform: translateX(-3px); }
+  84% { opacity: .65; transform: translateX(3px); }
+  89%, 100% { opacity: 0; transform: translateY(4px); }
+}
+@keyframes axe-swing {
+  0%, 18% { transform: rotate(38deg); }
+  30% { transform: rotate(54deg); }
+  42% { transform: rotate(34deg); }
+  57% { transform: rotate(56deg); }
+  68% { transform: rotate(31deg); }
+  90% { transform: rotate(-68deg); }
+  94% { transform: rotate(-74deg); }
+  100% { transform: rotate(-12deg); }
 }
 @keyframes bed-crack-flash {
-  0%, 19%, 31%, 100% { opacity: 0; }
-  21%, 28% { opacity: 1; }
+  0%, 83%, 100% { opacity: 0; }
+  85%, 90% { opacity: 1; }
 }
 @keyframes bed-pixel-pop {
-  0%, 25%, 100% { opacity: 0; transform: translate(0, 0); }
-  29% { opacity: 1; transform: translate(0, 0); }
-  48% { opacity: 1; transform: translate(var(--pixel-dx), var(--pixel-dy)); }
-  57% { opacity: 0; transform: translate(var(--pixel-dx), var(--pixel-dy)); }
+  0%, 87%, 100% { opacity: 0; transform: translate(0, 0); }
+  90% { opacity: 1; transform: translate(0, 0); }
+  100% { opacity: 1; transform: translate(var(--pixel-dx), var(--pixel-dy)); }
 }
 @keyframes bed-caption {
-  0%, 30%, 70%, 100% { opacity: 0; transform: translateY(4px); }
-  36%, 62% { opacity: 1; transform: translateY(0); }
+  0%, 89%, 100% { opacity: 0; transform: translateY(4px); }
+  93%, 100% { opacity: 1; transform: translateY(0); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .bed-intact, .bed-crack, .bed-fragment, .bed-break-caption { animation: none; }
-  .bed-intact { opacity: 1; transform: none; }
-  .bed-crack, .bed-fragment, .bed-break-caption { opacity: 0; }
+  .bed-intact, .axe-swing, .bed-crack, .bed-fragment, .bed-break-caption { animation: none; }
+  .bed-intact { opacity: 0; transform: none; }
+  .axe-swing { opacity: 0; transform: none; }
+  .bed-crack { opacity: 1; }
+  .bed-fragment { opacity: 1; transform: none; }
+  .bed-break-caption { opacity: 1; transform: none; }
 }
 
 @layer utilities {

@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { ClerkProvider, SignIn, SignUp, Show, useClerk } from "@clerk/react";
+import { ClerkProvider, SignIn, SignUp, Show, useClerk, useUser } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
@@ -102,8 +102,38 @@ function SignInPage() {
   usePageMeta("Sign in", "Sign in to save favorites, ratings, and notes.");
   return (
     <AuthShell>
-      <BedBreakAnimation />
-      <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} />
+      <SignIn
+        routing="path"
+        path={`${basePath}/sign-in`}
+        signUpUrl={`${basePath}/sign-up`}
+        forceRedirectUrl={`${basePath}/bed-break-entry`}
+      />
+    </AuthShell>
+  );
+}
+
+function BedBreakEntryPage() {
+  const { isLoaded, isSignedIn } = useUser();
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      setLocation("/sign-in", { replace: true });
+      return;
+    }
+
+    const timeout = window.setTimeout(() => setLocation("/", { replace: true }), 2500);
+    return () => window.clearTimeout(timeout);
+  }, [isLoaded, isSignedIn, setLocation]);
+
+  return (
+    <AuthShell>
+      {isLoaded && isSignedIn ? (
+        <BedBreakAnimation />
+      ) : (
+        <p className="font-mono text-sm text-[#B22222]">Checking your session…</p>
+      )}
     </AuthShell>
   );
 }
@@ -167,6 +197,7 @@ function AppRoutes() {
     <Switch>
       <Route path="/sign-in/*?" component={SignInPage} />
       <Route path="/sign-up/*?" component={SignUpPage} />
+      <Route path="/bed-break-entry" component={BedBreakEntryPage} />
       <Route>
         <Layout>
           <RoutedErrorBoundary>

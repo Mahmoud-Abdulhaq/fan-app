@@ -21,8 +21,15 @@ export function BedBreakAnimation() {
             <rect x="54" y="81" width="111" height="9" fill="#4b2023" />
             <rect x="63" y="90" width="8" height="9" fill="#241214" />
             <rect x="149" y="90" width="8" height="9" fill="#241214" />
-            <path className="bed-crack" d="M104 55L97 65L105 69L98 80L108 87" fill="none" stroke="#f0b6ad" strokeWidth="3" />
-            <path className="bed-crack" d="M97 65L88 61M105 69L116 64M98 80L88 84" fill="none" stroke="#f0b6ad" strokeWidth="2" />
+          </g>
+
+          <path className="bed-crack" d="M104 55L97 65L105 69L98 80L108 87M97 65L88 61M105 69L116 64M98 80L88 84" fill="none" stroke="#f0b6ad" strokeWidth="3" />
+          <g className="axe-swing">
+            <rect x="128" y="20" width="6" height="39" fill="#895530" />
+            <rect x="120" y="17" width="18" height="8" fill="#d8cdc6" />
+            <rect x="118" y="19" width="5" height="5" fill="#aab2bd" />
+            <rect x="136" y="18" width="4" height="6" fill="#aab2bd" />
+            <rect x="129" y="29" width="4" height="23" fill="#a86c3d" />
           </g>
 
           <g>
