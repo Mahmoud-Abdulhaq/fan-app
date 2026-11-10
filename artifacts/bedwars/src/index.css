@@ -140,10 +140,12 @@
   h1, h2, h3, .font-display { font-family: 'Chakra Petch', sans-serif; letter-spacing: -0.01em; }
 }
 
-/* Keep the red-and-black identity while allowing semantic colors and readable hierarchy. */
-.text-primary { color: #F87171 !important; }
+/* The site uses the requested dark-red color for every text element. */
+body, body * {
+  color: #B22222 !important;
+}
 input::placeholder, textarea::placeholder, .cl-formFieldInput::placeholder {
-  color: hsl(0 40% 72%) !important;
+  color: #B22222 !important;
   opacity: 1;
 }
 
@@ -166,7 +168,7 @@ body::after {
 @keyframes shake { 0%,100% { transform: none } 20% { transform: translateX(-6px) } 40% { transform: translateX(6px) } 60% { transform: translateX(-4px) } 80% { transform: translateX(3px) } }
 .shake { animation: shake .4s ease both; }
 
-.cl-formFieldInput::placeholder { color: hsl(0 40% 72%); opacity: 1; }
+.cl-formFieldInput::placeholder { color: #B22222 !important; opacity: 1; }
 .cl-formButtonPrimary:hover { filter: brightness(1.08); }
 .cl-socialButtonsBlockButton:hover { background: hsl(217 33% 22%) !important; }
 
