@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useUser } from "@clerk/react";
-import { Flame, Trophy, Heart, Star, NotebookPen, Shield, GitCompare } from "lucide-react";
-import { useGetDashboard, type Kit } from "@workspace/api-client-react";
+import { Flame, Trophy, Heart, Star, NotebookPen, Shield, GitCompare, Swords } from "lucide-react";
+import { useGetDashboard, useGetGameProfile, type Kit } from "@workspace/api-client-react";
 import { useKits, usePageMeta } from "@/lib/bw";
 import { ErrorState, KitCard, SnapshotNote } from "@/components/bw";
 import { TriviaCard } from "@/components/trivia";
@@ -12,6 +12,7 @@ export default function Dashboard() {
   usePageMeta("Your dashboard", "Your favorites, ratings, notes and trivia scores.");
   const { user } = useUser();
   const dash = useGetDashboard();
+  const arena = useGetGameProfile();
   const { map } = useKits();
   const { profile, isLoading, isError, refetch } = useProfile();
   const featured = dash.data ? map.get(dash.data.featuredId) : undefined;
@@ -52,6 +53,16 @@ export default function Dashboard() {
           </div>
         </section>
       )}
+
+      <Link href="/minigame" data-testid="link-dashboard-arena"
+        className="mg-paper group mt-6 flex flex-wrap items-center justify-between gap-4 rounded-lg p-5 transition-transform hover:-translate-y-0.5">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.25em]">New / 1v1 practice</p>
+          <p className="font-display text-2xl font-bold uppercase tracking-wide">The Pit: Blue vs Orange</p>
+          <p className="text-sm">Bridge, break the bot's bed, earn coins and unlock kits.{arena.data ? ` ${arena.data.coins} coins / ${arena.data.wins} wins so far.` : ""}</p>
+        </div>
+        <span className="mg-cta inline-flex items-center gap-2 rounded-lg border-2 border-[#B22222] bg-[#f7dccf] px-5 py-2.5 font-display font-bold uppercase tracking-widest"><Swords className="h-5 w-5" />Enter arena</span>
+      </Link>
 
       <div className="mt-6 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
         {featured ? <FeaturedKit kit={featured} /> : <div className="h-64 animate-pulse rounded-lg bg-card/60" />}

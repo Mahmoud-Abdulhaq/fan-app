@@ -1,2 +1,3 @@
 - [BedWars content provenance](bedwars-content.md) — preserve the supplied Season 17 snapshot attribution; category ordering is not a complete letter-tier assignment.
 - [BedWars text color](bedwars-text-contrast.md) — the user explicitly wants every text element dark red, including text on dark surfaces.
+- [Minigame scope](minigame-scope.md) — keep the playable practice game simple, sign-in-only, blue versus orange, with a limited item shop.

@@ -4,6 +4,27 @@
  * Api
  * OpenAPI spec version: 1.0.0
  */
+export interface GameProfile {
+  coins: number;
+  games: number;
+  wins: number;
+  unlocked: string[];
+}
+
+export interface GameKitInput {
+  /** @minLength 1 */
+  kitId: string;
+}
+
+export interface GameTicket {
+  matchId: string;
+}
+
+export interface GameResultInput {
+  matchId: string;
+  won: boolean;
+}
+
 export interface HealthStatus {
   status: string;
 }

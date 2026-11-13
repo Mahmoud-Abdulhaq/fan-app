@@ -17,6 +17,7 @@ import KitDetail from "@/pages/kit-detail";
 import CounterPage from "@/pages/counter";
 import Compare from "@/pages/compare";
 import Guide from "@/pages/guide";
+import Minigame from "@/pages/minigame";
 import { usePageMeta } from "@/lib/bw";
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false } } });
@@ -209,6 +210,7 @@ function AppRoutes() {
               <Route path="/counter" component={CounterPage} />
               <Route path="/compare" component={Compare} />
               <Route path="/guide" component={Guide} />
+              <Route path="/minigame" component={Minigame} />
               <Route component={NotFound} />
             </Switch>
           </RoutedErrorBoundary>

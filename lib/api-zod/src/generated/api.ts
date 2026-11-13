@@ -7,6 +7,54 @@
 import * as zod from 'zod';
 
 
+export const GetGameProfileResponse = zod.object({
+  "coins": zod.number().int(),
+  "games": zod.number().int(),
+  "wins": zod.number().int(),
+  "unlocked": zod.array(zod.string())
+})
+
+
+
+
+
+export const UnlockGameKitBody = zod.object({
+  "kitId": zod.string().min(1)
+})
+
+export const UnlockGameKitResponse = zod.object({
+  "coins": zod.number().int(),
+  "games": zod.number().int(),
+  "wins": zod.number().int(),
+  "unlocked": zod.array(zod.string())
+})
+
+
+
+
+
+export const StartGameMatchBody = zod.object({
+  "kitId": zod.string().min(1)
+})
+
+export const StartGameMatchResponse = zod.object({
+  "matchId": zod.string()
+})
+
+
+export const FinishGameMatchBody = zod.object({
+  "matchId": zod.string(),
+  "won": zod.boolean()
+})
+
+export const FinishGameMatchResponse = zod.object({
+  "coins": zod.number().int(),
+  "games": zod.number().int(),
+  "wins": zod.number().int(),
+  "unlocked": zod.array(zod.string())
+})
+
+
 export const HealthCheckResponse = zod.object({
   "status": zod.string()
 })

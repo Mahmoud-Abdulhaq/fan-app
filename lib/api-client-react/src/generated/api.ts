@@ -27,6 +27,10 @@ import type {
   Counter,
   CounterInput,
   Dashboard,
+  GameKitInput,
+  GameProfile,
+  GameResultInput,
+  GameTicket,
   HealthStatus,
   Kit,
   Note,
@@ -67,6 +71,347 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   }
   return result;
 };
+
+export const getGetGameProfileUrl = () => {
+
+
+
+
+  return `/api/minigame/profile`
+}
+
+export const getGameProfile = async ( options?: Parameters<typeof customFetch>[1]): Promise<GameProfile> => {
+
+  return customFetch<GameProfile>(getGetGameProfileUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGameProfileQueryKey = () => {
+    return [
+    `/api/minigame/profile`
+    ] as const;
+    }
+
+
+export const getGetGameProfileQueryOptions = <TData = Awaited<ReturnType<typeof getGameProfile>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGameProfile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGameProfileQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGameProfile>>> = ({ signal }) => getGameProfile({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGameProfile>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetGameProfileQueryResult = NonNullable<Awaited<ReturnType<typeof getGameProfile>>>
+export type GetGameProfileQueryError = ErrorType<unknown>
+
+
+export function useGetGameProfile<TData = Awaited<ReturnType<typeof getGameProfile>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGameProfile>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGameProfile>>,
+          TError,
+          Awaited<ReturnType<typeof getGameProfile>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGameProfile<TData = Awaited<ReturnType<typeof getGameProfile>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGameProfile>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGameProfile>>,
+          TError,
+          Awaited<ReturnType<typeof getGameProfile>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGameProfile<TData = Awaited<ReturnType<typeof getGameProfile>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGameProfile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetGameProfile<TData = Awaited<ReturnType<typeof getGameProfile>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getGameProfile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetGameProfileQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUnlockGameKitUrl = () => {
+
+
+
+
+  return `/api/minigame/unlock`
+}
+
+export const unlockGameKit = async (gameKitInput: GameKitInput, options?: Parameters<typeof customFetch>[1]): Promise<GameProfile> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GameProfile>(getUnlockGameKitUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(gameKitInput)
+  }
+);}
+
+
+
+
+
+export const getUnlockGameKitMutationKey = () => ['unlockGameKit'] as const;
+
+export const getUnlockGameKitMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unlockGameKit>>, TError,UnlockGameKitMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unlockGameKit>>, TError,UnlockGameKitMutationVariables, TContext> => {
+
+const mutationKey = getUnlockGameKitMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unlockGameKit>>, UnlockGameKitMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  unlockGameKit(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnlockGameKitMutationResult = NonNullable<Awaited<ReturnType<typeof unlockGameKit>>>
+    export type UnlockGameKitMutationBody = BodyType<GameKitInput>
+    export type UnlockGameKitMutationError = ErrorType<unknown>
+    export type UnlockGameKitMutationVariables = {data: BodyType<GameKitInput>}
+
+    export const useUnlockGameKit = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unlockGameKit>>, TError,UnlockGameKitMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof unlockGameKit>>,
+        TError,
+        UnlockGameKitMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUnlockGameKitMutationOptions(options), queryClient);
+    }
+
+export const getStartGameMatchUrl = () => {
+
+
+
+
+  return `/api/minigame/match`
+}
+
+export const startGameMatch = async (gameKitInput: GameKitInput, options?: Parameters<typeof customFetch>[1]): Promise<GameTicket> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GameTicket>(getStartGameMatchUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(gameKitInput)
+  }
+);}
+
+
+
+
+
+export const getStartGameMatchMutationKey = () => ['startGameMatch'] as const;
+
+export const getStartGameMatchMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startGameMatch>>, TError,StartGameMatchMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof startGameMatch>>, TError,StartGameMatchMutationVariables, TContext> => {
+
+const mutationKey = getStartGameMatchMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startGameMatch>>, StartGameMatchMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  startGameMatch(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StartGameMatchMutationResult = NonNullable<Awaited<ReturnType<typeof startGameMatch>>>
+    export type StartGameMatchMutationBody = BodyType<GameKitInput>
+    export type StartGameMatchMutationError = ErrorType<unknown>
+    export type StartGameMatchMutationVariables = {data: BodyType<GameKitInput>}
+
+    export const useStartGameMatch = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startGameMatch>>, TError,StartGameMatchMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof startGameMatch>>,
+        TError,
+        StartGameMatchMutationVariables,
+        TContext
+      > => {
+      return useMutation(getStartGameMatchMutationOptions(options), queryClient);
+    }
+
+export const getFinishGameMatchUrl = () => {
+
+
+
+
+  return `/api/minigame/finish`
+}
+
+export const finishGameMatch = async (gameResultInput: GameResultInput, options?: Parameters<typeof customFetch>[1]): Promise<GameProfile> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GameProfile>(getFinishGameMatchUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(gameResultInput)
+  }
+);}
+
+
+
+
+
+export const getFinishGameMatchMutationKey = () => ['finishGameMatch'] as const;
+
+export const getFinishGameMatchMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof finishGameMatch>>, TError,FinishGameMatchMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof finishGameMatch>>, TError,FinishGameMatchMutationVariables, TContext> => {
+
+const mutationKey = getFinishGameMatchMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof finishGameMatch>>, FinishGameMatchMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  finishGameMatch(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FinishGameMatchMutationResult = NonNullable<Awaited<ReturnType<typeof finishGameMatch>>>
+    export type FinishGameMatchMutationBody = BodyType<GameResultInput>
+    export type FinishGameMatchMutationError = ErrorType<unknown>
+    export type FinishGameMatchMutationVariables = {data: BodyType<GameResultInput>}
+
+    export const useFinishGameMatch = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof finishGameMatch>>, TError,FinishGameMatchMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof finishGameMatch>>,
+        TError,
+        FinishGameMatchMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFinishGameMatchMutationOptions(options), queryClient);
+    }
 
 export const getHealthCheckUrl = () => {
 

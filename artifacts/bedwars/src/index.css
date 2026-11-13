@@ -292,3 +292,31 @@ body::after {
   .hover-elevate-2:hover:not(.no-default-hover-elevate)::after, .active-elevate-2:active:not(.no-default-active-elevate)::after { background-color: var(--elevate-2); }
   .border.hover-elevate:not(.no-hover-interaction-elevate)::after, .border.active-elevate:not(.no-active-interaction-elevate)::after, .border.hover-elevate-2:not(.no-hover-interaction-elevate)::after, .border.active-elevate-2:not(.no-active-interaction-elevate)::after { inset: -1px; }
 }
+
+/* ---- Arena minigame ---- */
+.mg-paper {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 10px 24px #0007;
+}
+.mg-ticket::before, .mg-ticket::after {
+  content: ''; position: absolute; top: 50%; width: 14px; height: 14px; margin-top: -7px; border-radius: 999px;
+  background: #0b0708; border: 1px solid hsl(0 45% 40% / .35);
+}
+.mg-ticket::before { left: -8px; } .mg-ticket::after { right: -8px; }
+.mg-owned { box-shadow: 0 0 0 2px #B22222 inset, 0 10px 24px #0007; }
+.mg-cta { background: hsl(var(--secondary)); transition: transform .15s ease, box-shadow .15s ease; box-shadow: 0 4px 0 #6d1414; }
+.mg-cta:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 0 #6d1414; }
+.mg-cta:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #6d1414; }
+.mg-paper kbd { font-family: 'JetBrains Mono', monospace; font-size: .68rem; padding: 0 .25rem; border: 1px solid #B2222255; border-radius: 3px; }
+@keyframes mg-pop { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: none; } }
+.mg-pop { animation: mg-pop .25s cubic-bezier(.2,.8,.2,1.2) both; }
+@keyframes mg-stamp { 0% { opacity: 0; transform: scale(2.2) rotate(-8deg); } 60% { opacity: 1; transform: scale(.95) rotate(-4deg); } 100% { opacity: 1; transform: scale(1) rotate(-4deg); } }
+.mg-stamp { animation: mg-stamp .45s cubic-bezier(.2,.8,.2,1) both; padding: .2em .5em; border: 6px solid #B22222; background: hsl(var(--card)); border-radius: .4rem; }
+.mg-stamp-in { animation: mg-stamp .5s cubic-bezier(.2,.8,.2,1) both; display: inline-block; }
+@keyframes mg-ready { 0%,100% { transform: none; } 50% { transform: translateY(-1px); } }
+.mg-ready { animation: mg-ready 1.2s ease-in-out infinite; }
+@keyframes mg-blink { 50% { opacity: .35; } }
+.mg-blink { animation: mg-blink .8s steps(1) infinite; }
+.mg-touch { -webkit-tap-highlight-color: transparent; }
+@media (prefers-reduced-motion: reduce) { .mg-pop, .mg-stamp, .mg-stamp-in, .mg-ready, .mg-blink { animation: none; } }
