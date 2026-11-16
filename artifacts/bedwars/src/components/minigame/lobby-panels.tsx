@@ -1,8 +1,8 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Check, Coins, Lock, Play, RotateCcw, Sparkles, Swords } from "lucide-react";
 import type { Kit } from "@workspace/api-client-react";
 import { isOwned, unlockPrice, type KitLoadout } from "@/game/abilities";
-import type { MinigameSettings, TouchMode } from "@/game/settings";
+import { formatKey, KEYBIND_ACTIONS, KEYBIND_LABELS, type KeybindAction, type MinigameSettings, type TouchMode } from "@/game/settings";
 import type { Difficulty } from "@/game/types";
 import { cn } from "@/lib/utils";
 
@@ -201,6 +201,38 @@ function Toggle({ label, note, value, onChange, id }: { label: string; note: str
 }
 
 export function SettingsPanel({ settings, update, reset }: { settings: MinigameSettings; update: (p: Partial<MinigameSettings>) => void; reset: () => void }) {
+  const [captureAction, setCaptureAction] = useState<KeybindAction | null>(null);
+  const [keybindMessage, setKeybindMessage] = useState("");
+
+  useEffect(() => {
+    if (!captureAction) return;
+    const capture = (event: KeyboardEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.code === "Escape") {
+        setCaptureAction(null);
+        setKeybindMessage("Key change cancelled.");
+        return;
+      }
+      const allowed = /^Key[A-Z]$/.test(event.code) || /^Digit[0-9]$/.test(event.code)
+        || ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(event.code);
+      if (!allowed) {
+        setKeybindMessage("Use a letter, number, arrow key, or Space.");
+        return;
+      }
+      const conflict = KEYBIND_ACTIONS.find((action) => action !== captureAction && settings.keybinds[action] === event.code);
+      if (conflict) {
+        setKeybindMessage(`${formatKey(event.code)} is already assigned to ${KEYBIND_LABELS[conflict].toLowerCase()}.`);
+        return;
+      }
+      update({ keybinds: { ...settings.keybinds, [captureAction]: event.code } });
+      setCaptureAction(null);
+      setKeybindMessage(`${KEYBIND_LABELS[captureAction]} is now ${formatKey(event.code)}.`);
+    };
+    window.addEventListener("keydown", capture, true);
+    return () => window.removeEventListener("keydown", capture, true);
+  }, [captureAction, settings.keybinds, update]);
+
   return (
     <div className="mg-paper max-w-2xl space-y-3 rounded-lg p-5" data-testid="panel-settings">
       <div className="flex items-center justify-between">
@@ -229,6 +261,24 @@ export function SettingsPanel({ settings, update, reset }: { settings: MinigameS
           ))}
         </div>
         <p className="mt-1 text-xs">Auto shows the on-screen pad on touch screens.</p>
+      </div>
+      <div className="border-t border-[#B22222]/25 pt-3">
+        <p className="font-display text-sm font-bold">Keyboard controls</p>
+        <p className="mb-2 mt-1 text-xs">Select a key, then press a new one. Changes save automatically.</p>
+        <div className="grid gap-1.5 sm:grid-cols-2">
+          {KEYBIND_ACTIONS.map((action) => (
+            <div key={action} className="flex items-center justify-between gap-2 rounded-md border border-[#B22222]/20 px-2.5 py-1.5">
+              <span className="text-sm font-semibold">{KEYBIND_LABELS[action]}</span>
+              <button type="button" aria-label={`Change ${KEYBIND_LABELS[action]} key`}
+                aria-pressed={captureAction === action} data-testid={`button-keybind-${action}`}
+                onClick={() => { setKeybindMessage(""); setCaptureAction(captureAction === action ? null : action); }}
+                className={cn("min-w-14 rounded border px-2 py-1 font-mono text-xs font-bold", captureAction === action ? "border-2 border-[#B22222] bg-[#f7dccf]" : "border-[#B22222]/40")}>
+                {captureAction === action ? "Press key…" : formatKey(settings.keybinds[action])}
+              </button>
+            </div>
+          ))}
+        </div>
+        <p className="mt-2 min-h-4 text-xs" aria-live="polite">{keybindMessage || "Each action must use a different key. Escape cancels key selection."}</p>
       </div>
     </div>
   );

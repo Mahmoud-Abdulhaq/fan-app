@@ -6,17 +6,16 @@ import { renderGame, type RenderOpts } from "@/game/renderer";
 import { MIN_REWARD_SECONDS, bedAt, canPlace, dist, resolveTarget, wallAt } from "@/game/core";
 import { W, H, CELL, type Action, type Cell, type Input, type ShopItemId } from "@/game/types";
 import type { KitLoadout } from "@/game/abilities";
-import type { MinigameSettings } from "@/game/settings";
+import { formatKey, KEYBIND_ACTIONS, type KeybindAction, type MinigameSettings } from "@/game/settings";
 import { HudBottom, HudTop, LogFeed } from "./hud";
 import { MatchShop } from "./match-shop";
 import { TouchControls, type TouchState } from "./touch-controls";
 
 export interface MatchOutcome { won: boolean; elapsed: number; kills: number; deaths: number; bedsBroken: number; blocksPlaced: number; forfeited: boolean }
 
-const KEYMAP: Record<string, string> = {
-  KeyW: "up", ArrowUp: "up", KeyS: "down", ArrowDown: "down", KeyA: "left", ArrowLeft: "left", KeyD: "right", ArrowRight: "right",
-  KeyJ: "attack", KeyK: "mine",
-};
+function currentKeymap(settings: MinigameSettings): Record<string, KeybindAction> {
+  return Object.fromEntries(KEYBIND_ACTIONS.map((action) => [settings.keybinds[action], action]));
+}
 
 export function GameView({ playerKit, botKit, settings, onFinish }: { playerKit: KitLoadout; botKit: KitLoadout; settings: MinigameSettings; onFinish: (o: MatchOutcome) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -117,19 +116,24 @@ export function GameView({ playerKit, botKit, settings, onFinish }: { playerKit:
     const down = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
-      if (e.code === "Escape" || e.code === "KeyP") { e.preventDefault(); if (!e.repeat && !game.over) setPaused(!pausedRef.current); return; }
+      const action = currentKeymap(settingsRef.current)[e.code];
+      if (e.code === "Escape" || action === "pause") { e.preventDefault(); if (!e.repeat && !game.over) setPaused(!pausedRef.current); return; }
       if (pausedRef.current || game.over) return;
-      const m = KEYMAP[e.code];
-      if (m) { keys.current.add(m); e.preventDefault(); return; }
-      if (e.code === "Space" || e.code === "KeyE") { e.preventDefault(); actions.current.push({ type: "place" }); }
-      else if (e.code === "KeyQ" && !e.repeat) actions.current.push({ type: "ability" });
-      else if (e.code === "KeyB" && !e.repeat) setShopOpen((o) => !o);
+      if (action === "up" || action === "down" || action === "left" || action === "right" || action === "attack" || action === "mine") {
+        keys.current.add(action); e.preventDefault(); return;
+      }
+      if (action === "place") { e.preventDefault(); actions.current.push({ type: "place" }); }
+      else if (action === "ability" && !e.repeat) actions.current.push({ type: "ability" });
+      else if (action === "shop" && !e.repeat) setShopOpen((o) => !o);
       else if (shopOpenRef.current && /^Digit[1-8]$/.test(e.code) && !e.repeat) {
         const item = SHOP_ITEMS[Number(e.code.slice(5)) - 1];
         if (item) actions.current.push({ type: "buy", item: item.id });
       }
     };
-    const up = (e: KeyboardEvent) => { const m = KEYMAP[e.code]; if (m) keys.current.delete(m); };
+    const up = (e: KeyboardEvent) => {
+      const action = currentKeymap(settingsRef.current)[e.code];
+      if (action === "up" || action === "down" || action === "left" || action === "right" || action === "attack" || action === "mine") keys.current.delete(action);
+    };
     const blur = () => { if (!game.over) setPaused(true); else releaseAll(); };
     const vis = () => { if (document.hidden) blur(); };
     window.addEventListener("keydown", down);
@@ -225,22 +229,22 @@ export function GameView({ playerKit, botKit, settings, onFinish }: { playerKit:
       <aside className="space-y-3">
         <button type="button" onClick={() => setPaused(!paused)} disabled={!!over}
           className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#B22222]/50 bg-black/60 px-3 py-2 text-sm font-bold hover:bg-[#B22222]/10" data-testid="button-pause">
-          {paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}{paused ? "Resume" : "Pause"} <kbd className="font-mono text-[10px]">P</kbd>
+          {paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}{paused ? "Resume" : "Pause"} <kbd className="font-mono text-[10px]">{formatKey(settings.keybinds.pause)}</kbd>
         </button>
         <LogFeed hud={hud} />
         <div className="mg-paper rounded-lg p-3 text-xs">
           <p className="font-display text-xs font-bold uppercase tracking-widest">{playerKit.kitName}</p>
           <p className="mt-1"><span className="font-bold">{playerKit.passive.name}:</span> {playerKit.passive.summary}</p>
-          <p className="mt-1"><span className="font-bold">{playerKit.ability.name} (Q):</span> {playerKit.ability.summary}</p>
+          <p className="mt-1"><span className="font-bold">{playerKit.ability.name} ({formatKey(settings.keybinds.ability)}):</span> {playerKit.ability.summary}</p>
         </div>
         {settings.showHints && (
           <div className="mg-paper rounded-lg p-3 text-xs leading-relaxed" data-testid="panel-controls">
             <p className="mb-1 font-display text-xs font-bold uppercase tracking-widest">Controls</p>
-            <p><kbd>WASD</kbd> / arrows move</p>
-            <p><kbd>J</kbd> or click bot: sword</p>
-            <p><kbd>K</kbd> or right-click: axe (walls, bridges, bed)</p>
-            <p><kbd>Space</kbd>/<kbd>E</kbd> or click-drag: place block</p>
-            <p><kbd>Q</kbd> ability, <kbd>B</kbd> shop, <kbd>P</kbd> pause</p>
+            <p><kbd>{formatKey(settings.keybinds.up)}</kbd><kbd>{formatKey(settings.keybinds.left)}</kbd><kbd>{formatKey(settings.keybinds.down)}</kbd><kbd>{formatKey(settings.keybinds.right)}</kbd> move</p>
+            <p><kbd>{formatKey(settings.keybinds.attack)}</kbd> or click bot: sword</p>
+            <p><kbd>{formatKey(settings.keybinds.mine)}</kbd> or right-click: axe (walls, bridges, bed)</p>
+            <p><kbd>{formatKey(settings.keybinds.place)}</kbd> or click-drag: place block</p>
+            <p><kbd>{formatKey(settings.keybinds.ability)}</kbd> ability, <kbd>{formatKey(settings.keybinds.shop)}</kbd> shop, <kbd>{formatKey(settings.keybinds.pause)}</kbd> pause (<kbd>Esc</kbd> always works)</p>
             <p className="mt-1 opacity-80">Dashed square shows where your block or axe lands.</p>
           </div>
         )}
