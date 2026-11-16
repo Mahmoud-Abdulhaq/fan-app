@@ -4,10 +4,13 @@
  * Api
  * OpenAPI spec version: 1.0.0
  */
+import type { GameProfileEquippedSkins } from './gameProfileEquippedSkins';
 
 export interface GameProfile {
   coins: number;
   games: number;
   wins: number;
   unlocked: string[];
+  ownedSkins: string[];
+  equippedSkins: GameProfileEquippedSkins;
 }

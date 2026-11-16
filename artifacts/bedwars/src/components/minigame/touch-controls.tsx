@@ -10,7 +10,7 @@ function Hold({ onDown, onUp, children, className, label, testId }: { onDown: ()
       onPointerDown={(e) => { e.preventDefault(); (e.currentTarget as HTMLButtonElement).setPointerCapture(e.pointerId); onDown(); }}
       onPointerUp={() => onUp?.()} onPointerCancel={() => onUp?.()} onLostPointerCapture={() => onUp?.()}
       onContextMenu={(e) => e.preventDefault()}
-      className={cn("mg-touch grid select-none place-items-center rounded-lg border-2 border-[#B22222]/40 bg-[#f3e6dc] active:scale-95 active:bg-[#ead3c6] touch-none", className)}>
+      className={cn("mg-touch grid select-none place-items-center rounded-lg border-2 border-[#B22222]/40 bg-[#202023] active:scale-95 active:bg-[#303035] touch-none", className)}>
       {children}
     </button>
   );
@@ -42,7 +42,7 @@ export function TouchControls({ touch, onPlace, onAbility, onShop }: { touch: Mu
         <Hold onDown={onAbility} label="Ability" testId="touch-ability" className="h-12 w-14 text-[10px] font-bold"><Sparkles className="h-5 w-5" />Q</Hold>
         <Hold onDown={onPlace} label="Place block" testId="touch-place" className="h-12 w-14 text-[10px] font-bold"><Box className="h-5 w-5" />Block</Hold>
         <Hold onDown={() => { touch.current.mine = true; }} onUp={() => { touch.current.mine = false; }} label="Axe" testId="touch-mine" className="col-span-1 h-16 w-14 text-[10px] font-bold"><Axe className="h-6 w-6" />Axe</Hold>
-        <Hold onDown={() => { touch.current.attack = true; }} onUp={() => { touch.current.attack = false; }} label="Sword" testId="touch-attack" className="col-span-2 h-16 w-full bg-[#f7e2d6] text-xs font-bold"><Sword className="h-7 w-7" />Sword</Hold>
+        <Hold onDown={() => { touch.current.attack = true; }} onUp={() => { touch.current.attack = false; }} label="Sword" testId="touch-attack" className="col-span-2 h-16 w-full bg-[#29292d] text-xs font-bold"><Sword className="h-7 w-7" />Sword</Hold>
       </div>
     </div>
   );

@@ -26,7 +26,7 @@ export function ResultScreen({ outcome, kit, settle, onRetry, onDiscard, onRemat
         <h1 className={cn("mg-stamp-in mt-2 font-display text-6xl font-bold uppercase tracking-widest sm:text-7xl")} data-testid="text-result">{outcome.won ? "Victory" : "Defeat"}</h1>
         <div className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-5">
           {stats.map(([k, v]) => (
-            <div key={k} className="rounded-md border border-[#B22222]/25 bg-[#fbf4ef] p-2">
+            <div key={k} className="rounded-md border border-[#B22222]/25 bg-[#141416] p-2">
               <p className="font-display text-2xl font-bold">{v}</p>
               <p className="font-mono text-[9px] uppercase tracking-wider">{k}</p>
             </div>
@@ -48,7 +48,7 @@ export function ResultScreen({ outcome, kit, settle, onRetry, onDiscard, onRemat
               <p className="flex items-center justify-center gap-2 font-semibold"><AlertTriangle className="h-4 w-4" />Reward did not save. {settle.message}</p>
               <p className="mt-1 text-xs">Retrying is safe: each match pays out once.</p>
               <div className="mt-3 flex flex-wrap justify-center gap-2">
-                <button type="button" onClick={onRetry} className="flex items-center gap-1.5 rounded-md border-2 border-[#B22222] bg-[#f7dccf] px-4 py-2 text-sm font-bold" data-testid="button-retry-reward"><RotateCcw className="h-4 w-4" />Retry save</button>
+                <button type="button" onClick={onRetry} className="flex items-center gap-1.5 rounded-md border-2 border-[#B22222] bg-[#202023] px-4 py-2 text-sm font-bold" data-testid="button-retry-reward"><RotateCcw className="h-4 w-4" />Retry save</button>
                 <button type="button" onClick={onDiscard} className="flex items-center gap-1.5 rounded-md border border-[#B22222]/40 px-4 py-2 text-sm font-bold" data-testid="button-discard-reward"><Trash2 className="h-4 w-4" />Discard reward</button>
               </div>
             </div>
@@ -56,9 +56,9 @@ export function ResultScreen({ outcome, kit, settle, onRetry, onDiscard, onRemat
         </div>
 
         <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
-          <button type="button" onClick={onRematch} disabled={blocked || rematchPending} data-testid="button-rematch"
-            className="mg-cta flex items-center justify-center gap-2 rounded-lg border-2 border-[#B22222] bg-[#f7dccf] px-6 py-3 font-display text-lg font-bold uppercase tracking-widest disabled:opacity-50">
-            {rematchPending ? <RotateCcw className="h-5 w-5 animate-spin" /> : <Swords className="h-5 w-5" />}Rematch
+          <button type="button" onClick={onRematch} disabled={blocked || rematchPending} data-testid="button-choose-map"
+            className="mg-cta flex items-center justify-center gap-2 rounded-lg border-2 border-[#B22222] bg-[#202023] px-6 py-3 font-display text-lg font-bold uppercase tracking-widest disabled:opacity-50">
+            {rematchPending ? <RotateCcw className="h-5 w-5 animate-spin" /> : <Swords className="h-5 w-5" />}Choose map
           </button>
           <button type="button" onClick={onLobby} disabled={blocked} data-testid="button-back-lobby"
             className="flex items-center justify-center gap-2 rounded-lg border border-[#B22222]/50 px-6 py-3 font-bold disabled:opacity-50">

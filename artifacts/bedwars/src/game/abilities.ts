@@ -14,7 +14,7 @@ export const PASSIVES: Record<KitCategory, PassiveDef> = {
   Fighter: { name: "Sharpened", summary: "+1 sword damage on every hit." },
   Movement: { name: "Light Feet", summary: "Move 18% faster at all times." },
   Support: { name: "Field Medic", summary: "Out-of-combat regeneration ticks twice as fast." },
-  Economy: { name: "Overclocked Forge", summary: "Your home iron generator runs 35% faster." },
+  Economy: { name: "Early Supply", summary: "Begin each match with 4 extra iron." },
   Defender: { name: "Reinforced", summary: "Bed starts with +3 health; your walls take one extra axe hit." },
   Ranged: { name: "Long Reach", summary: "Sword reach +0.5 tiles." },
 };
@@ -43,10 +43,10 @@ export const ABILITIES: Record<KitCategory, AbilityDef[]> = {
   ],
   Economy: [
     { id: "payday", name: "Payday", cooldown: 18, summary: "Gain 8 iron on the spot." },
-    { id: "prospector", name: "Prospector", cooldown: 30, summary: "Gain 1 diamond." },
+    { id: "prospector", name: "Prospector", cooldown: 30, summary: "Gain 8 iron on the spot." },
     { id: "haggle", name: "Haggle", cooldown: 25, summary: "Iron prices are 35% cheaper for 15s." },
     { id: "magnet", name: "Magnet", cooldown: 20, summary: "Pull every generator stock within 7 tiles." },
-    { id: "vault", name: "Vault", cooldown: 45, summary: "Gain 1 emerald." },
+    { id: "vault", name: "Vault", cooldown: 45, summary: "Gain 12 iron on the spot." },
   ],
   Defender: [
     { id: "barricade", name: "Barricade", cooldown: 20, summary: "Free walls on every open tile around your bed." },
@@ -128,7 +128,7 @@ export function triggerAbility(s: GameState, f: Fighter, foe: Fighter): AbilityR
       return done("Cleanse Pulse");
     }
     case "payday": f.iron += 8; addFloat(s, f.x, f.y - 0.8, "+8 iron", "#7d8590"); return done("Payday");
-    case "prospector": f.diamond += 1; addFloat(s, f.x, f.y - 0.8, "+1 diamond", "#2aa7bd"); return done("Prospector");
+    case "prospector": f.iron += 8; addFloat(s, f.x, f.y - 0.8, "+8 iron", "#9ea7b3"); return done("Prospector");
     case "haggle": buff("discount", 15); return done("Haggle: iron 35% off");
     case "magnet": {
       let got = 0;
@@ -136,7 +136,7 @@ export function triggerAbility(s: GameState, f: Fighter, foe: Fighter): AbilityR
       if (!got) return fail("No generator stock within 7 tiles");
       return done(`Magnet pulled ${got}`);
     }
-    case "vault": f.emerald += 1; addFloat(s, f.x, f.y - 0.8, "+1 emerald", "#2a9a5f"); return done("Vault");
+    case "vault": f.iron += 12; addFloat(s, f.x, f.y - 0.8, "+12 iron", "#9ea7b3"); return done("Vault");
     case "barricade": {
       const bed = bedOf(s, f.team);
       if (!bed.alive) return fail("Your bed is gone");

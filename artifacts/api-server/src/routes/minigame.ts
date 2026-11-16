@@ -1,13 +1,36 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
 import { getAuth } from "@clerk/express";
-import { randomUUID } from "node:crypto";
+import { randomInt, randomUUID } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 import { db, gameProfilesTable, gameMatchesTable, kitsTable, usersTable } from "@workspace/db";
 import * as V from "@workspace/api-zod";
 
 const router: IRouter = Router();
 const prices: Record<string, number> = { D: 0, C: 20, B: 30, A: 40, S: 50 };
+const skinCrates = {
+  swords: ["sword-wood-birch", "sword-wood-charcoal", "sword-stone-ember", "sword-stone-frost", "sword-iron-ruby", "sword-iron-shadow"],
+  axes: ["axe-rust", "axe-onyx"],
+  blocks: ["block-obsidian", "block-ash", "block-cobalt", "block-moss", "block-sandstone"],
+} as const;
+const staticSkinSlots: Record<string, "sword" | "axe" | "block"> = {
+  "sword-wood-birch": "sword", "sword-wood-charcoal": "sword", "sword-stone-ember": "sword", "sword-stone-frost": "sword", "sword-iron-ruby": "sword", "sword-iron-shadow": "sword",
+  "axe-rust": "axe", "axe-onyx": "axe",
+  "block-obsidian": "block", "block-ash": "block", "block-cobalt": "block", "block-moss": "block", "block-sandstone": "block",
+};
+const emptyEquipped = { sword: null, axe: null, block: null, kit: null };
 const userId = (req: Request) => getAuth(req).userId!;
+
+function kitSkinId(id: string) { return `kit-${id}`; }
+
+async function skinSlotsForKits() {
+  const kits = await db.select().from(kitsTable);
+  return Object.fromEntries(kits.map((kit) => [kitSkinId(kit.id), "kit" as const]));
+}
+
+async function crateSkins(crate: "swords" | "kits" | "blocks" | "axes") {
+  if (crate === "kits") return Object.keys(await skinSlotsForKits());
+  return [...skinCrates[crate]];
+}
 
 router.use("/minigame", async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const id = getAuth(req).userId;
@@ -23,6 +46,8 @@ async function profile(id: string) {
   return V.GetGameProfileResponse.parse({
     ...row,
     unlocked: [...new Set([...row!.unlocked, ...kits.filter(k => k.data.tier === "D").map(k => k.id)])],
+    ownedSkins: row!.ownedSkins ?? [],
+    equippedSkins: row!.equippedSkins ?? emptyEquipped,
   });
 }
 
@@ -82,6 +107,47 @@ router.post("/minigame/finish", async (req, res): Promise<void> => {
       coins: row!.coins + (parsed.data.won ? 15 : 5),
       games: row!.games + 1,
       wins: row!.wins + (parsed.data.won ? 1 : 0),
+    }).where(eq(gameProfilesTable.userId, id));
+    return null;
+  });
+  if (error) { res.status(400).json({ error }); return; }
+  res.json(await profile(id));
+});
+
+router.post("/minigame/crates/open", async (req, res): Promise<void> => {
+  const parsed = V.OpenSkinCrateBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: "Choose a skin crate." }); return; }
+  const id = userId(req);
+  const slots = { ...staticSkinSlots, ...await skinSlotsForKits() };
+  const pool = await crateSkins(parsed.data.crate);
+  const result = await db.transaction(async (tx) => {
+    const [row] = await tx.select().from(gameProfilesTable).where(eq(gameProfilesTable.userId, id)).for("update");
+    const available = pool.filter((skinId) => !row!.ownedSkins.includes(skinId));
+    if (!available.length) return { error: "You already own every skin in this crate." };
+    if (row!.coins < 10) return { error: "You need 10 coins to open this crate." };
+    const skinId = available[randomInt(available.length)]!;
+    await tx.update(gameProfilesTable).set({
+      coins: row!.coins - 10,
+      ownedSkins: [...row!.ownedSkins, skinId],
+    }).where(eq(gameProfilesTable.userId, id));
+    return { skinId };
+  });
+  if ("error" in result) { res.status(400).json({ error: result.error }); return; }
+  res.json(V.OpenSkinCrateResponse.parse({ skinId: result.skinId, profile: await profile(id) }));
+});
+
+router.post("/minigame/cosmetics/equip", async (req, res): Promise<void> => {
+  const parsed = V.EquipGameSkinBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: "Choose a valid skin slot." }); return; }
+  const id = userId(req);
+  const slots = { ...staticSkinSlots, ...await skinSlotsForKits() };
+  const { slot, skinId } = parsed.data;
+  if (skinId !== null && slots[skinId] !== slot) { res.status(400).json({ error: "That skin does not fit this slot." }); return; }
+  const error = await db.transaction(async (tx) => {
+    const [row] = await tx.select().from(gameProfilesTable).where(eq(gameProfilesTable.userId, id)).for("update");
+    if (skinId !== null && !row!.ownedSkins.includes(skinId)) return "You do not own that skin.";
+    await tx.update(gameProfilesTable).set({
+      equippedSkins: { ...(row!.equippedSkins ?? emptyEquipped), [slot]: skinId },
     }).where(eq(gameProfilesTable.userId, id));
     return null;
   });

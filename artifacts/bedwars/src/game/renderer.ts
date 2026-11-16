@@ -1,12 +1,13 @@
 import { W, H, CELL, VOID, BRIDGE, type GameState, type Cell, type Fighter } from "./types";
 import { TEAM_COLOR, baseAt, hasBuff, idx } from "./core";
+import { blockSkinForIndex, STATIC_SKINS } from "./cosmetics";
 
 export interface RenderOpts { target: Cell | null; targetKind: "place" | "break" | "bed" | "blocked" | null; showGrid: boolean; shake: boolean }
 
 const C = {
-  void: "#160a0d", ground: "#efe2d8", groundAlt: "#e7d7cb", cliff: "#8f6f63", cliffDeep: "#4a2a2c",
-  bridge: "#f6e6c9", bridgeLine: "#dcc39b", wall: "#cdb6a6", wallTop: "#e2cfc1", wallDark: "#8c7062",
-  ink: "#B22222", paper: "#f7eee8", iron: "#cdd2da", diamond: "#5fd0e2", emerald: "#35c17a",
+  void: "#09090b", ground: "#171719", groundAlt: "#202023", cliff: "#333136", cliffDeep: "#111113",
+  bridge: "#302729", bridgeLine: "#4a3437", wall: "#2b292d", wallTop: "#414046", wallDark: "#111113",
+  ink: "#B22222", paper: "#111113", iron: "#aeb4be",
   blueDark: "#1c3d8f", orangeDark: "#9a4a0e",
 };
 
@@ -38,7 +39,11 @@ function drawFighter(ctx: CanvasRenderingContext2D, s: GameState, f: Fighter, la
   const sz = 16;
   ctx.fillStyle = dark; ctx.fillRect(px - sz / 2 - 1, py - sz / 2 - 1 + lift, sz + 2, sz + 2);
   ctx.fillStyle = col; ctx.fillRect(px - sz / 2, py - sz / 2 + lift, sz, sz);
-  ctx.fillStyle = "rgba(255,255,255,.25)"; ctx.fillRect(px - sz / 2, py - sz / 2 + lift, sz, 4);
+  const styleHash = f.cosmetics.kit ? [...f.cosmetics.kit].reduce((n, ch) => (n * 31 + ch.charCodeAt(0)) >>> 0, 7) : 0;
+  const hatColors = ["#6d272c", "#59452b", "#3d5263", "#54426b", "#515b37", "#803b58"];
+  ctx.fillStyle = f.cosmetics.kit ? hatColors[styleHash % hatColors.length] : "#34343a";
+  ctx.fillRect(px - sz / 2 + 2, py - sz / 2 + lift, sz - 4, 4);
+  ctx.fillStyle = "rgba(178,34,34,.65)"; ctx.fillRect(px - sz / 2 + 3, py - sz / 2 + 5 + lift, sz - 6, 2);
   // visor facing
   ctx.fillStyle = C.paper;
   const vx = px + f.facing.x * 4, vy = py + f.facing.y * 4 + lift;
@@ -54,12 +59,46 @@ function drawFighter(ctx: CanvasRenderingContext2D, s: GameState, f: Fighter, la
     const ang = Math.atan2(f.facing.y, f.facing.x);
     ctx.strokeStyle = `rgba(247,238,232,${1 - sw / 0.16})`; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.arc(px, py + lift, 18, ang - 1 + sw * 8, ang + 0.2 + sw * 8); ctx.stroke();
+    const skin = STATIC_SKINS.find((item) => item.id === f.cosmetics[f.swingWeapon]);
+    ctx.save();
+    ctx.translate(px + f.facing.x * 8, py + f.facing.y * 8 + lift);
+    ctx.rotate(ang - 0.75 + Math.min(1, sw / 0.16) * 0.8);
+    const handle = skin?.accent ?? "#8a5a39";
+    const blade = skin?.color ?? "#aeb4be";
+    if (f.swingWeapon === "axe") {
+      ctx.fillStyle = handle; ctx.fillRect(-2, -1, 11, 3);
+      ctx.fillStyle = blade; ctx.fillRect(6, -6, 5, 12);
+      ctx.fillStyle = skin?.accent ?? "#777b83"; ctx.fillRect(8, -4, 2, 8);
+    } else {
+      ctx.fillStyle = handle; ctx.fillRect(-2, -1, 7, 3);
+      ctx.fillStyle = blade; ctx.fillRect(4, -2, 12, 5);
+      ctx.fillStyle = skin?.accent ?? "#d3d5da"; ctx.fillRect(12, -1, 4, 3);
+    }
+    ctx.restore();
   }
   // hp bar
   const bw = 26, ratio = Math.max(0, f.hp / f.maxHp);
   ctx.fillStyle = C.paper; ctx.fillRect(px - bw / 2 - 1, py - 20 + lift, bw + 2, 5);
   ctx.fillStyle = ratio > 0.35 ? col : C.ink; ctx.fillRect(px - bw / 2, py - 19 + lift, bw * ratio, 3);
   pill(ctx, px, py - 29 + lift, label, col, 0.95);
+}
+
+function drawShopkeeper(ctx: CanvasRenderingContext2D, x: number, y: number, facing: number) {
+  const px = x * CELL, py = y * CELL;
+  ctx.fillStyle = "#09090b";
+  ctx.fillRect(px - 8, py - 7, 16, 17);
+  ctx.fillStyle = "#7a2028";
+  ctx.fillRect(px - 7, py - 6, 14, 4);
+  ctx.fillStyle = "#b77d58";
+  ctx.fillRect(px - 5, py - 2, 10, 6);
+  ctx.fillStyle = "#29292e";
+  ctx.fillRect(px - 6, py + 4, 12, 7);
+  ctx.fillStyle = "#B22222";
+  ctx.fillRect(px + facing * 2 - 1, py, 2, 2);
+  ctx.font = "700 8px 'JetBrains Mono', monospace";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillStyle = C.ink;
+  ctx.fillText("SHOP", px, py - 15);
 }
 
 export function renderGame(ctx: CanvasRenderingContext2D, s: GameState, o: RenderOpts, dpr: number) {
@@ -89,9 +128,10 @@ export function renderGame(ctx: CanvasRenderingContext2D, s: GameState, o: Rende
     const b = s.base[idx(x, y)];
     if (b === VOID) continue;
     const X = x * CELL, Y = y * CELL;
+    const blockSkin = blockSkinForIndex(s.wallSkin[idx(x, y)]);
     if (b === BRIDGE) {
-      ctx.fillStyle = C.bridge; ctx.fillRect(X, Y, CELL, CELL);
-      ctx.fillStyle = C.bridgeLine; ctx.fillRect(X, Y + 7, CELL, 1); ctx.fillRect(X, Y + 16, CELL, 1); ctx.fillRect(X + 11, Y, 1, 7);
+      ctx.fillStyle = blockSkin?.color ?? C.bridge; ctx.fillRect(X, Y, CELL, CELL);
+      ctx.fillStyle = blockSkin?.accent ?? C.bridgeLine; ctx.fillRect(X, Y + 7, CELL, 1); ctx.fillRect(X, Y + 16, CELL, 1); ctx.fillRect(X + 11, Y, 1, 7);
     } else {
       ctx.fillStyle = (x + y) % 2 ? C.ground : C.groundAlt; ctx.fillRect(X, Y, CELL, CELL);
     }
@@ -99,8 +139,8 @@ export function renderGame(ctx: CanvasRenderingContext2D, s: GameState, o: Rende
   }
   // generators
   for (const g of s.gens) {
-    const X = g.x * CELL, Y = g.y * CELL, col = g.kind === "iron" ? C.iron : g.kind === "diamond" ? C.diamond : C.emerald;
-    ctx.fillStyle = "#cbb3a4"; ctx.fillRect(X + 2, Y + 2, CELL - 4, CELL - 4);
+    const X = g.x * CELL, Y = g.y * CELL, col = C.iron;
+    ctx.fillStyle = "#303035"; ctx.fillRect(X + 2, Y + 2, CELL - 4, CELL - 4);
     ctx.fillStyle = C.paper; ctx.fillRect(X + 4, Y + 4, CELL - 8, CELL - 8);
     const pulse = 1 + Math.sin(s.t * 4 + g.x) * 0.12;
     ctx.save(); ctx.translate(X + CELL / 2, Y + CELL / 2); ctx.rotate(Math.PI / 4); ctx.scale(pulse, pulse);
@@ -126,14 +166,17 @@ export function renderGame(ctx: CanvasRenderingContext2D, s: GameState, o: Rende
     if (r < 0.7) { ctx.strokeStyle = C.ink; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(X + 12, Y + 5); ctx.lineTo(X + 15, Y + 11); ctx.lineTo(X + 11, Y + 15); if (r < 0.4) { ctx.lineTo(X + 16, Y + 19); } ctx.stroke(); }
     pill(ctx, X + CELL / 2, Y - 6, `BED ${b.hp}/${b.maxHp}`, col);
   }
+  drawShopkeeper(ctx, 6.45, 7.5, 1);
+  drawShopkeeper(ctx, 33.55, 7.5, -1);
   // walls
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const w = s.wall[idx(x, y)];
     if (!w) continue;
     const X = x * CELL, Y = y * CELL;
-    ctx.fillStyle = C.wallDark; ctx.fillRect(X, Y, CELL, CELL);
-    ctx.fillStyle = C.wall; ctx.fillRect(X + 1, Y + 1, CELL - 2, CELL - 5);
-    ctx.fillStyle = C.wallTop; ctx.fillRect(X + 1, Y + 1, CELL - 2, 4);
+    const blockSkin = blockSkinForIndex(s.wallSkin[idx(x, y)]);
+    ctx.fillStyle = blockSkin?.color ?? C.wallDark; ctx.fillRect(X, Y, CELL, CELL);
+    ctx.fillStyle = blockSkin?.accent ?? C.wall; ctx.fillRect(X + 1, Y + 1, CELL - 2, CELL - 5);
+    ctx.fillStyle = blockSkin?.color ?? C.wallTop; ctx.fillRect(X + 1, Y + 1, CELL - 2, 4);
     if (w <= 2) { ctx.strokeStyle = C.wallDark; ctx.beginPath(); ctx.moveTo(X + 6, Y + 6); ctx.lineTo(X + 11, Y + 12); ctx.lineTo(X + 9, Y + 17); ctx.stroke(); }
     if (w <= 1) { ctx.beginPath(); ctx.moveTo(X + 17, Y + 5); ctx.lineTo(X + 14, Y + 13); ctx.stroke(); }
   }

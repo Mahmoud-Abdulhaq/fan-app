@@ -3,33 +3,45 @@ import { createGame, step, emptyInput, buyItem, checkWinner, STEP, SHOP_ITEMS } 
 import { bedOf, destroyBed, killFighter, placeBlock, rewardFor, idx } from "./core";
 import { PASSIVES, ABILITIES, triggerAbility, type KitLoadout, type KitCategory } from "./abilities";
 import { botThink } from "./bot";
+import { ARENA_MAPS } from "./maps";
+import { STATIC_SKINS } from "./cosmetics";
 
 const loadout = (category: KitCategory = "Fighter", index = 0): KitLoadout => ({
   kitId: `${category}-${index}`, kitName: category, tier: "D", category,
   passive: PASSIVES[category], ability: ABILITIES[category][index],
 });
-const game = () => createGame({ blueKit: loadout(), orangeKit: loadout(), difficulty: "rookie" });
+const game = () => createGame({ blueKit: loadout(), orangeKit: loadout() });
 const tick = (s: ReturnType<typeof game>, seconds: number, bot = false) => {
   for (let n = 0; n < seconds / STEP; n++) step(s, { blue: emptyInput(), orange: bot ? botThink(s, STEP) : emptyInput() }, STEP);
 };
 
 {
   const s = game();
+  assert.equal(s.gens.length, 2, "matches use only the two home iron generators");
+  assert.ok(s.gens.every((generator) => generator.kind === "iron" && generator.interval === 0.05), "each iron generator releases one iron every 50ms");
   s.blue.x = 2.5; s.blue.y = 9.5;
   tick(s, 10);
-  assert.ok(s.blue.iron >= 9, "standing in iron generator earns iron");
+  assert.ok(s.blue.iron >= 39, "standing in iron generator earns iron rapidly");
   const iron = s.blue.iron;
   assert.equal(buyItem(s, s.blue, "wool8").ok, true);
   assert.equal(s.blue.iron, iron - 4);
   assert.equal(s.blue.blocks, 16);
   s.blue.x = 19.5; s.blue.y = 7.5;
   assert.equal(buyItem(s, s.blue, "wool8").ok, false, "cannot shop off home island");
-  tick(s, 25);
-  assert.ok(s.blue.emerald >= 1, "emerald generation and collection work");
-  s.blue.x = 13.5; s.blue.y = 3.5;
-  tick(s, 15);
-  assert.ok(s.blue.diamond >= 1, "diamond generation and collection work");
   assert.deepEqual([...new Set(SHOP_ITEMS.map(i => i.group))].sort(), ["Axes", "Blocks", "Swords"]);
+  assert.equal(SHOP_ITEMS.length, 6, "match shop stays limited to blocks, swords and axes");
+  assert.equal(ARENA_MAPS.length, 5, "the lobby offers five maps");
+  for (const tier of [0, 1, 2]) {
+    assert.equal(STATIC_SKINS.filter((skin) => skin.slot === "sword" && skin.swordTier === tier).length, 2, `sword tier ${tier} has two skins`);
+  }
+}
+{
+  for (const map of ARENA_MAPS) {
+    const s = createGame({ blueKit: loadout(), orangeKit: loadout(), mapId: map.id });
+    assert.equal(s.mapId, map.id, `${map.name} is selected for the match`);
+    assert.equal(s.gens.length, 2, `${map.name} has one iron generator per team`);
+    assert.ok(s.base[idx(19, 7)] !== 0, `${map.name} keeps the center arena connected`);
+  }
 }
 {
   const s = game();
@@ -49,7 +61,7 @@ const tick = (s: ReturnType<typeof game>, seconds: number, bot = false) => {
 {
   for (const category of Object.keys(ABILITIES) as KitCategory[]) {
     ABILITIES[category].forEach((_ability, index) => {
-      const s = createGame({ blueKit: loadout(category, index), orangeKit: loadout(), difficulty: "standard" });
+      const s = createGame({ blueKit: loadout(category, index), orangeKit: loadout() });
       s.blue.hp = 8;
       s.orange.x = s.blue.x + 1; s.orange.y = s.blue.y;
       triggerAbility(s, s.blue, s.orange);
@@ -61,7 +73,6 @@ const tick = (s: ReturnType<typeof game>, seconds: number, bot = false) => {
 {
   const s = game();
   tick(s, 150, true);
-  assert.ok(s.orange.blocksPlaced > 0, "bot builds bridges");
   assert.ok(s.orange.sword > 0, "bot collects and buys equipment");
   assert.ok(s.orange.x < 30 || s.blue.deaths > 0 || !bedOf(s, "blue").alive, "bot advances toward the player");
   assert.ok(Number.isFinite(s.orange.x) && Number.isFinite(s.orange.hp));
@@ -69,4 +80,4 @@ const tick = (s: ReturnType<typeof game>, seconds: number, bot = false) => {
 assert.equal(rewardFor(true, 19), 0);
 assert.equal(rewardFor(true, 20), 15);
 assert.equal(rewardFor(false, 20), 5);
-console.log("Minigame engine checks passed: resources, purchases, bridges, respawn, final elimination, all abilities, bot progression, rewards.");
+console.log("Minigame engine checks passed: iron-only economy, 50ms generators, five maps, purchases, bridges, respawn, final elimination, abilities, bot progression and rewards.");

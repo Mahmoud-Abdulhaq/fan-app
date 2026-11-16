@@ -4,12 +4,11 @@ import { Flame, Trophy, Heart, Star, NotebookPen, Shield, GitCompare, Swords } f
 import { useGetDashboard, useGetGameProfile, type Kit } from "@workspace/api-client-react";
 import { useKits, usePageMeta } from "@/lib/bw";
 import { ErrorState, KitCard, SnapshotNote } from "@/components/bw";
-import { TriviaCard } from "@/components/trivia";
 import { FeaturedKit, KitList } from "@/pages/home";
 import { useProfile } from "@/hooks/use-personal";
 
 export default function Dashboard() {
-  usePageMeta("Your dashboard", "Your favorites, ratings, notes and trivia scores.");
+  usePageMeta("Your dashboard", "Your favorites, ratings, notes and Arena progress.");
   const { user } = useUser();
   const dash = useGetDashboard();
   const arena = useGetGameProfile();
@@ -17,8 +16,6 @@ export default function Dashboard() {
   const { profile, isLoading, isError, refetch } = useProfile();
   const featured = dash.data ? map.get(dash.data.featuredId) : undefined;
   const favKits = (profile?.favorites ?? []).map((id) => map.get(id)).filter(Boolean) as Kit[];
-  const triviaRight = profile?.triviaScores.filter((s) => s.correct).length ?? 0;
-
   const stats = [
     { label: "Favorites", value: profile?.favorites.length ?? 0, icon: Heart },
     { label: "Ratings", value: profile?.ratings.length ?? 0, icon: Star },
@@ -47,10 +44,6 @@ export default function Dashboard() {
               <p className="text-xs uppercase tracking-wider text-muted-foreground">{s.label}</p>
             </div>
           ))}
-          <div className="rounded-lg border border-card-border bg-card p-4">
-            <p className="font-display text-3xl font-bold" data-testid="stat-trivia">{triviaRight}<span className="text-lg text-muted-foreground">/{profile?.triviaScores.length ?? 0}</span></p>
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">Trivia correct</p>
-          </div>
         </section>
       )}
 
@@ -61,12 +54,11 @@ export default function Dashboard() {
           <p className="font-display text-2xl font-bold uppercase tracking-wide">The Pit: Blue vs Orange</p>
           <p className="text-sm">Bridge, break the bot's bed, earn coins and unlock kits.{arena.data ? ` ${arena.data.coins} coins / ${arena.data.wins} wins so far.` : ""}</p>
         </div>
-        <span className="mg-cta inline-flex items-center gap-2 rounded-lg border-2 border-[#B22222] bg-[#f7dccf] px-5 py-2.5 font-display font-bold uppercase tracking-widest"><Swords className="h-5 w-5" />Enter arena</span>
+        <span className="mg-cta inline-flex items-center gap-2 rounded-lg border-2 border-[#B22222] bg-[#202023] px-5 py-2.5 font-display font-bold uppercase tracking-widest"><Swords className="h-5 w-5" />Enter arena</span>
       </Link>
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+      <div className="mt-6">
         {featured ? <FeaturedKit kit={featured} /> : <div className="h-64 animate-pulse rounded-lg bg-card/60" />}
-        <TriviaCard />
       </div>
 
       <section className="mt-8">

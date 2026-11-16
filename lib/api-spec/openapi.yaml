@@ -60,6 +60,34 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GameProfile"
+  /minigame/crates/open:
+    post:
+      operationId: openSkinCrate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/SkinCrateInput"}
+      responses:
+        "200":
+          description: Awarded a new skin and updated the profile
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/SkinCrateResult"}
+  /minigame/cosmetics/equip:
+    post:
+      operationId: equipGameSkin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/EquipSkinInput"}
+      responses:
+        "200":
+          description: Updated equipped skins
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/GameProfile"}
   /healthz:
     get:
       operationId: healthCheck
@@ -255,7 +283,7 @@ components:
   schemas:
     GameProfile:
       type: object
-      required: [coins, games, wins, unlocked]
+      required: [coins, games, wins, unlocked, ownedSkins, equippedSkins]
       properties:
         coins: { type: integer }
         games: { type: integer }
@@ -263,6 +291,34 @@ components:
         unlocked:
           type: array
           items: { type: string }
+        ownedSkins:
+          type: array
+          items: { type: string }
+        equippedSkins:
+          type: object
+          required: [sword, axe, block, kit]
+          properties:
+            sword: { type: ["string", "null"] }
+            axe: { type: ["string", "null"] }
+            block: { type: ["string", "null"] }
+            kit: { type: ["string", "null"] }
+    SkinCrateInput:
+      type: object
+      required: [crate]
+      properties:
+        crate: { type: string, enum: [swords, kits, blocks, axes] }
+    SkinCrateResult:
+      type: object
+      required: [skinId, profile]
+      properties:
+        skinId: { type: string }
+        profile: {$ref: "#/components/schemas/GameProfile"}
+    EquipSkinInput:
+      type: object
+      required: [slot, skinId]
+      properties:
+        slot: { type: string, enum: [sword, axe, block, kit] }
+        skinId: { type: ["string", "null"] }
     GameKitInput:
       type: object
       required: [kitId]

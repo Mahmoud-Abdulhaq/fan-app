@@ -169,7 +169,12 @@ body::after {
 .shake { animation: shake .4s ease both; }
 
 .cl-formFieldInput::placeholder { color: #B22222 !important; opacity: 1; }
-.cl-formButtonPrimary:hover { filter: brightness(1.08); }
+.cl-formButtonPrimary {
+  background: #252528 !important;
+  border: 1px solid #6f2929 !important;
+  box-shadow: 0 3px 0 #09090b !important;
+}
+.cl-formButtonPrimary:hover { background: #303035 !important; filter: none; }
 .cl-socialButtonsBlockButton:hover { background: hsl(217 33% 22%) !important; }
 
 .bed-break-scene { width: min(100%, 20rem); margin: 0; text-align: center; }

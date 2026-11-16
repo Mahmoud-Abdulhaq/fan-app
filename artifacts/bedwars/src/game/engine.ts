@@ -1,6 +1,7 @@
 import {
-  VOID, type GameState, type Fighter, type Team, type Input, type ShopItemId, type Cost, type Difficulty, type Bed, type LogEntry,
+  VOID, type GameState, type Fighter, type Team, type Input, type ShopItemId, type Cost, type Bed, type LogEntry, type EquippedSkins,
 } from "./types";
+import type { ArenaMapId } from "./maps";
 import {
   ATTACK_CD, MAX_HP, MINE_CD, SUDDEN_DEATH_AT, TEAM_COLOR, TIER_NAMES, addFloat, baseAt, bedAt, bedHpFor, bedOf, buildMap, burst,
   dealDamage, destroyBed, dist, fighterOf, fighterSpeed, hasBuff, idx, inBounds, meleeDamage, mineCell, moveFighter, onHomeIsland,
@@ -15,11 +16,9 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: "wool8", label: "Wool x8", group: "Blocks", cost: { iron: 4 }, amount: 8, desc: "Bridge the void or wall your bed." },
   { id: "wool20", label: "Wool x20", group: "Blocks", cost: { iron: 9 }, amount: 20, desc: "Bulk stack for long bridges." },
   { id: "sword1", label: "Stone Sword", group: "Swords", cost: { iron: 10 }, tier: 1, desc: "4 damage per hit." },
-  { id: "sword2", label: "Iron Sword", group: "Swords", cost: { iron: 20, diamond: 2 }, tier: 2, desc: "6 damage per hit." },
-  { id: "sword3", label: "Diamond Sword", group: "Swords", cost: { emerald: 2 }, tier: 3, desc: "8 damage per hit." },
+  { id: "sword2", label: "Iron Sword", group: "Swords", cost: { iron: 20 }, tier: 2, desc: "6 damage per hit." },
   { id: "axe1", label: "Stone Axe", group: "Axes", cost: { iron: 8 }, tier: 1, desc: "2 damage to blocks and beds." },
   { id: "axe2", label: "Iron Axe", group: "Axes", cost: { iron: 16 }, tier: 2, desc: "3 damage to blocks and beds." },
-  { id: "axe3", label: "Diamond Axe", group: "Axes", cost: { diamond: 3 }, tier: 3, desc: "4 damage to blocks and beds." },
 ];
 
 export function effectiveCost(s: GameState, f: Fighter, item: ShopItem): Cost {
@@ -28,7 +27,7 @@ export function effectiveCost(s: GameState, f: Fighter, item: ShopItem): Cost {
   return c;
 }
 export function canAfford(f: Fighter, c: Cost) {
-  return f.iron >= (c.iron ?? 0) && f.diamond >= (c.diamond ?? 0) && f.emerald >= (c.emerald ?? 0);
+  return f.iron >= (c.iron ?? 0);
 }
 export type BuyStatus = "ok" | "owned" | "poor" | "away";
 export function buyStatus(s: GameState, f: Fighter, id: ShopItemId): BuyStatus {
@@ -45,47 +44,44 @@ export function buyItem(s: GameState, f: Fighter, id: ShopItemId): { ok: boolean
   if (st === "away") return { ok: false, message: "Shop only works on your home island" };
   if (st === "poor") return { ok: false, message: "Not enough resources" };
   const c = effectiveCost(s, f, item);
-  f.iron -= c.iron ?? 0; f.diamond -= c.diamond ?? 0; f.emerald -= c.emerald ?? 0;
+  f.iron -= c.iron ?? 0;
   if (item.group === "Blocks") f.blocks += item.amount!;
   if (item.group === "Swords") f.sword = item.tier!;
   if (item.group === "Axes") f.axe = item.tier!;
   return { ok: true, message: `Bought ${item.label}` };
 }
 
-function makeFighter(team: Team, kit: KitLoadout, spawn: { x: number; y: number }): Fighter {
+const EMPTY_SKINS: EquippedSkins = { sword: null, axe: null, block: null, kit: null };
+
+function makeFighter(team: Team, kit: KitLoadout, spawn: { x: number; y: number }, cosmetics = EMPTY_SKINS): Fighter {
   return {
     team, kit, x: spawn.x, y: spawn.y, spawn, facing: { x: team === "blue" ? 1 : -1, y: 0 },
     hp: MAX_HP, maxHp: MAX_HP, alive: true, eliminated: false, respawnAt: null,
-    sword: 0, axe: 0, blocks: 8, iron: 0, diamond: 0, emerald: 0,
+    sword: 0, axe: 0, blocks: 8, iron: kit.category === "Economy" ? 4 : 0, cosmetics, swingWeapon: "sword",
     attackCd: 0, mineCd: 0, abilityCd: 3, placeCd: 0, buffs: {}, lastHurt: -99, regenT: 0, swingT: -9, hurtT: -9,
     speedMul: 1, attackMul: 1, kills: 0, deaths: 0, bedsBroken: 0, blocksPlaced: 0, deathCause: "",
   };
 }
 
-export interface GameOptions { blueKit: KitLoadout; orangeKit: KitLoadout; difficulty: Difficulty; seed?: number }
+export interface GameOptions { blueKit: KitLoadout; orangeKit: KitLoadout; mapId?: ArenaMapId; cosmetics?: EquippedSkins; seed?: number }
 
 export function createGame(o: GameOptions): GameState {
-  const { base, wall } = buildMap();
+  const mapId = o.mapId ?? "classic";
+  const { base, wall, wallSkin } = buildMap(mapId);
   const mkBed = (team: Team, x: number, y: number, cat: string): Bed => ({ team, x, y, hp: bedHpFor(cat), maxHp: bedHpFor(cat), alive: true, hitT: -9 });
   const s: GameState = {
-    t: 0, base, wall,
-    blue: makeFighter("blue", o.blueKit, { x: 4.5, y: 7.5 }),
+    t: 0, base, wall, wallSkin, mapId,
+    blue: makeFighter("blue", o.blueKit, { x: 4.5, y: 7.5 }, o.cosmetics),
     orange: makeFighter("orange", o.orangeKit, { x: 35.5, y: 7.5 }),
     beds: [mkBed("blue", 2, 7, o.blueKit.category), mkBed("orange", 37, 7, o.orangeKit.category)],
     gens: [
-      { kind: "iron", x: 2, y: 9, interval: 1, timer: 0, stock: 0, cap: 40, owner: "blue" },
-      { kind: "iron", x: 37, y: 5, interval: 1, timer: 0, stock: 0, cap: 40, owner: "orange" },
-      { kind: "diamond", x: 13, y: 3, interval: 14, timer: 0, stock: 0, cap: 4, owner: null },
-      { kind: "diamond", x: 26, y: 11, interval: 14, timer: 0, stock: 0, cap: 4, owner: null },
-      { kind: "emerald", x: 19, y: 7, interval: 24, timer: 0, stock: 0, cap: 2, owner: null },
+      { kind: "iron", x: 2, y: 9, interval: 0.05, timer: 0, stock: 0, cap: 40, owner: "blue" },
+      { kind: "iron", x: 37, y: 5, interval: 0.05, timer: 0, stock: 0, cap: 40, owner: "orange" },
     ],
     projectiles: [], floats: [], particles: [], log: [], over: null, suddenDeath: false, shake: 0,
-    difficulty: o.difficulty, bot: { thinkT: 0, buyT: 0, placeT: 0, path: [], goal: "gather", gathering: true },
+    bot: { thinkT: 0, buyT: 0, placeT: 0, path: [], goal: "gather", gathering: true },
     seed: o.seed ?? 1337,
   };
-  const d = o.difficulty;
-  s.orange.speedMul = d === "rookie" ? 0.82 : d === "standard" ? 0.93 : 1;
-  s.orange.attackMul = d === "rookie" ? 1.6 : d === "standard" ? 1.2 : 1;
   pushLog(s, "Match live. Guard your bed, break theirs.", "neutral");
   return s;
 }
@@ -101,6 +97,7 @@ function respawn(s: GameState, f: Fighter) {
 }
 
 function swing(s: GameState, f: Fighter, foe: Fighter) {
+  f.swingWeapon = "sword";
   f.attackCd = ATTACK_CD * f.attackMul * (hasBuff(s, f, "haste") ? 0.5 : 1);
   f.swingT = s.t;
   if (!foe.alive) return;
@@ -135,8 +132,8 @@ export function stepFighter(s: GameState, f: Fighter, inp: Input, dt: number) {
 
   for (const g of s.gens) {
     if (g.stock > 0 && dist(f.x, f.y, g.x + 0.5, g.y + 0.5) < 0.85) {
-      f[g.kind] += g.stock;
-      addFloat(s, g.x + 0.5, g.y, `+${g.stock} ${g.kind}`, g.kind === "iron" ? "#7d8590" : g.kind === "diamond" ? "#2aa7bd" : "#2a9a5f");
+      f.iron += g.stock;
+      addFloat(s, g.x + 0.5, g.y, `+${g.stock} iron`, "#9ea7b3");
       g.stock = 0;
     }
   }
@@ -150,6 +147,7 @@ export function stepFighter(s: GameState, f: Fighter, inp: Input, dt: number) {
 
   if (inp.attack && f.attackCd <= 0) swing(s, f, foe);
   if (inp.mine && f.mineCd <= 0) {
+    f.swingWeapon = "axe";
     f.mineCd = MINE_CD; f.swingT = s.t;
     const r = mineCell(s, f, resolveTarget(f, inp.aim));
     if (r === "own-bed") say(s, f, "That is your own bed");
@@ -177,9 +175,7 @@ export function stepFighter(s: GameState, f: Fighter, inp: Input, dt: number) {
 
 function stepGenerators(s: GameState, dt: number) {
   for (const g of s.gens) {
-    let mult = 1;
-    if (g.kind === "iron" && g.owner && fighterOf(s, g.owner).kit.category === "Economy") mult = 1.35;
-    g.timer += dt * mult;
+    g.timer += dt;
     while (g.timer >= g.interval) { g.timer -= g.interval; g.stock = Math.min(g.cap, g.stock + 1); }
   }
 }
@@ -240,7 +236,7 @@ export function step(s: GameState, inputs: Record<Team, Input>, dt: number) {
 
 export interface HudSnapshot {
   t: number; hp: number; maxHp: number; alive: boolean; eliminated: boolean; respawnIn: number | null;
-  iron: number; diamond: number; emerald: number; blocks: number; sword: string; axe: string; swordTier: number; axeTier: number;
+  iron: number; blocks: number; sword: string; axe: string; swordTier: number; axeTier: number;
   abilityCd: number; abilityMax: number; onHome: boolean; discount: boolean; buffs: string[];
   beds: { team: Team; hp: number; maxHp: number; alive: boolean }[];
   bot: { hp: number; maxHp: number; alive: boolean; eliminated: boolean; respawnIn: number | null; sword: string };
@@ -252,7 +248,7 @@ export function hudSnapshot(s: GameState): HudSnapshot {
   return {
     t: s.t, hp: Math.max(0, f.hp), maxHp: f.maxHp, alive: f.alive, eliminated: f.eliminated,
     respawnIn: f.respawnAt !== null ? Math.max(0, f.respawnAt - s.t) : null,
-    iron: f.iron, diamond: f.diamond, emerald: f.emerald, blocks: f.blocks,
+    iron: f.iron, blocks: f.blocks,
     sword: TIER_NAMES[f.sword], axe: TIER_NAMES[f.axe], swordTier: f.sword, axeTier: f.axe,
     abilityCd: f.abilityCd, abilityMax: f.kit.ability.cooldown, onHome: onHomeIsland(f), discount: hasBuff(s, f, "discount"),
     buffs: Object.keys(f.buffs).filter((k) => hasBuff(s, f, k)),

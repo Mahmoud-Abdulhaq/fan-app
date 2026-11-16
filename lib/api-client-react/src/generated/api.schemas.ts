@@ -4,11 +4,59 @@
  * Api
  * OpenAPI spec version: 1.0.0
  */
+export type GameProfileEquippedSkins = {
+  /** @nullable */
+  sword: string | null;
+  /** @nullable */
+  axe: string | null;
+  /** @nullable */
+  block: string | null;
+  /** @nullable */
+  kit: string | null;
+};
+
 export interface GameProfile {
   coins: number;
   games: number;
   wins: number;
   unlocked: string[];
+  ownedSkins: string[];
+  equippedSkins: GameProfileEquippedSkins;
+}
+
+export type SkinCrateInputCrate = typeof SkinCrateInputCrate[keyof typeof SkinCrateInputCrate];
+
+
+export const SkinCrateInputCrate = {
+  swords: 'swords',
+  kits: 'kits',
+  blocks: 'blocks',
+  axes: 'axes',
+} as const;
+
+export interface SkinCrateInput {
+  crate: SkinCrateInputCrate;
+}
+
+export interface SkinCrateResult {
+  skinId: string;
+  profile: GameProfile;
+}
+
+export type EquipSkinInputSlot = typeof EquipSkinInputSlot[keyof typeof EquipSkinInputSlot];
+
+
+export const EquipSkinInputSlot = {
+  sword: 'sword',
+  axe: 'axe',
+  block: 'block',
+  kit: 'kit',
+} as const;
+
+export interface EquipSkinInput {
+  slot: EquipSkinInputSlot;
+  /** @nullable */
+  skinId: string | null;
 }
 
 export interface GameKitInput {

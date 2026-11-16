@@ -3,8 +3,9 @@ import { DoorOpen, Pause, Play } from "lucide-react";
 import { createGame, hudSnapshot, step, SHOP_ITEMS, STEP, type HudSnapshot } from "@/game/engine";
 import { botThink } from "@/game/bot";
 import { renderGame, type RenderOpts } from "@/game/renderer";
-import { MIN_REWARD_SECONDS, bedAt, canPlace, dist, resolveTarget, wallAt } from "@/game/core";
-import { W, H, CELL, type Action, type Cell, type Input, type ShopItemId } from "@/game/types";
+import { MIN_REWARD_SECONDS, bedAt, canPlace, dist, onHomeIsland, resolveTarget, wallAt } from "@/game/core";
+import { W, H, CELL, type Action, type Cell, type Input, type ShopItemId, type EquippedSkins } from "@/game/types";
+import type { ArenaMapId } from "@/game/maps";
 import type { KitLoadout } from "@/game/abilities";
 import { formatKey, KEYBIND_ACTIONS, type KeybindAction, type MinigameSettings } from "@/game/settings";
 import { HudBottom, HudTop, LogFeed } from "./hud";
@@ -17,9 +18,12 @@ function currentKeymap(settings: MinigameSettings): Record<string, KeybindAction
   return Object.fromEntries(KEYBIND_ACTIONS.map((action) => [settings.keybinds[action], action]));
 }
 
-export function GameView({ playerKit, botKit, settings, onFinish }: { playerKit: KitLoadout; botKit: KitLoadout; settings: MinigameSettings; onFinish: (o: MatchOutcome) => void }) {
+export function GameView({ playerKit, botKit, mapId, equippedSkins, settings, onFinish }: {
+  playerKit: KitLoadout; botKit: KitLoadout; mapId: ArenaMapId; equippedSkins: EquippedSkins;
+  settings: MinigameSettings; onFinish: (o: MatchOutcome) => void;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [game] = useState(() => createGame({ blueKit: playerKit, orangeKit: botKit, difficulty: settings.difficulty, seed: (Date.now() & 0xffffff) | 1 }));
+  const [game] = useState(() => createGame({ blueKit: playerKit, orangeKit: botKit, mapId, cosmetics: equippedSkins, seed: (Date.now() & 0xffffff) | 1 }));
   const keys = useRef(new Set<string>());
   const actions = useRef<Action[]>([]);
   const touch = useRef<TouchState>({ mx: 0, my: 0, attack: false, mine: false });
@@ -125,7 +129,7 @@ export function GameView({ playerKit, botKit, settings, onFinish }: { playerKit:
       if (action === "place") { e.preventDefault(); actions.current.push({ type: "place" }); }
       else if (action === "ability" && !e.repeat) actions.current.push({ type: "ability" });
       else if (action === "shop" && !e.repeat) setShopOpen((o) => !o);
-      else if (shopOpenRef.current && /^Digit[1-8]$/.test(e.code) && !e.repeat) {
+      else if (shopOpenRef.current && /^Digit[1-6]$/.test(e.code) && !e.repeat) {
         const item = SHOP_ITEMS[Number(e.code.slice(5)) - 1];
         if (item) actions.current.push({ type: "buy", item: item.id });
       }
@@ -158,6 +162,7 @@ export function GameView({ playerKit, botKit, settings, onFinish }: { playerKit:
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
     const c = cellFrom(e); const p = pointer.current; p.aim = c;
+    if (c.x === 6 && c.y === 7 && onHomeIsland(game.blue)) { setShopOpen(true); return; }
     if (e.button === 2) { p.mine = true; return; }
     const me = game.blue, foe = game.orange;
     if (foe.alive && Math.abs(Math.floor(foe.x) - c.x) <= 1 && Math.abs(Math.floor(foe.y) - c.y) <= 1 && dist(me.x, me.y, foe.x, foe.y) <= 2.4) { p.attack = true; return; }
@@ -178,13 +183,13 @@ export function GameView({ playerKit, botKit, settings, onFinish }: { playerKit:
     <div className="grid gap-4 lg:grid-cols-[1fr_260px]">
       <div className="min-w-0">
         <HudTop hud={hud} botKit={botKit} />
-        <div className="relative border-x-2 border-[#efe2d8] bg-[#160a0d]">
+        <div className="relative border-x-2 border-[#303035] bg-[#09090b]">
           <canvas ref={canvasRef} data-testid="canvas-game"
             className="block h-auto w-full touch-none select-none [image-rendering:pixelated]" style={{ aspectRatio: `${W} / ${H}` }}
             onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}
             onPointerLeave={(e) => { if (e.pointerType === "mouse") pointer.current.aim = null; }}
             onContextMenu={(e) => e.preventDefault()} />
-          {shopOpen && !over && <MatchShop game={game} onBuy={buy} onClose={() => setShopOpen(false)} />}
+          {shopOpen && !over && <MatchShop game={game} closeKey={formatKey(settings.keybinds.shop)} onBuy={buy} onClose={() => setShopOpen(false)} />}
           {!hud.alive && !hud.eliminated && !over && (
             <div className="pointer-events-none absolute inset-0 grid place-items-center">
               <div className="mg-paper mg-pop rounded-lg px-5 py-3 text-center" data-testid="overlay-respawn">
@@ -207,13 +212,13 @@ export function GameView({ playerKit, botKit, settings, onFinish }: { playerKit:
                   <div className="mt-4 space-y-2">
                     <p className="text-sm font-semibold">Forfeit counts as a loss{game.t >= MIN_REWARD_SECONDS ? " (5 coins)" : " with no reward (under 20s)"}.</p>
                     <div className="flex gap-2">
-                      <button type="button" onClick={() => finish(true)} className="flex-1 rounded-md border-2 border-[#B22222] bg-[#f7dccf] px-3 py-2 text-sm font-bold" data-testid="button-confirm-forfeit">Forfeit</button>
+                      <button type="button" onClick={() => finish(true)} className="flex-1 rounded-md border-2 border-[#B22222] bg-[#202023] px-3 py-2 text-sm font-bold" data-testid="button-confirm-forfeit">Forfeit</button>
                       <button type="button" onClick={() => setConfirmQuit(false)} className="flex-1 rounded-md border border-[#B22222]/40 px-3 py-2 text-sm font-bold" data-testid="button-cancel-forfeit">Keep playing</button>
                     </div>
                   </div>
                 ) : (
                   <div className="mt-4 flex gap-2">
-                    <button type="button" onClick={() => setPaused(false)} className="flex flex-1 items-center justify-center gap-1.5 rounded-md border-2 border-[#B22222] bg-[#f7dccf] px-3 py-2 text-sm font-bold" data-testid="button-resume"><Play className="h-4 w-4" />Resume</button>
+                    <button type="button" onClick={() => setPaused(false)} className="flex flex-1 items-center justify-center gap-1.5 rounded-md border-2 border-[#B22222] bg-[#202023] px-3 py-2 text-sm font-bold" data-testid="button-resume"><Play className="h-4 w-4" />Resume</button>
                     <button type="button" onClick={() => setConfirmQuit(true)} className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-[#B22222]/40 px-3 py-2 text-sm font-bold" data-testid="button-forfeit"><DoorOpen className="h-4 w-4" />Leave</button>
                   </div>
                 )}
@@ -221,7 +226,8 @@ export function GameView({ playerKit, botKit, settings, onFinish }: { playerKit:
             </div>
           )}
         </div>
-        <HudBottom hud={hud} kit={playerKit} onAbility={() => actions.current.push({ type: "ability" })} onShop={() => setShopOpen((o) => !o)} />
+        <HudBottom hud={hud} kit={playerKit} keybinds={settings.keybinds}
+          onAbility={() => actions.current.push({ type: "ability" })} onShop={() => setShopOpen((o) => !o)} />
         {showTouch && (
           <TouchControls touch={touch} onPlace={() => actions.current.push({ type: "place" })} onAbility={() => actions.current.push({ type: "ability" })} onShop={() => setShopOpen((o) => !o)} />
         )}

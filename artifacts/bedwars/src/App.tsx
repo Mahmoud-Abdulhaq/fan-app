@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
-import { ClerkProvider, SignIn, SignUp, Show, useClerk, useUser } from "@clerk/react";
+import { ClerkProvider, SignIn, SignUp, useClerk, useUser } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
@@ -10,7 +10,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { Layout } from "@/components/layout";
-import Home from "@/pages/home";
 import Dashboard from "@/pages/dashboard";
 import Kits from "@/pages/kits";
 import KitDetail from "@/pages/kit-detail";
@@ -100,7 +99,7 @@ function AuthShell({ children }: { children: ReactNode }) {
 }
 
 function SignInPage() {
-  usePageMeta("Sign in", "Sign in to save favorites, ratings, and notes.");
+  usePageMeta("Sign in", "Sign in to enter BedWars Intel and play Arena.");
   return (
     <AuthShell>
       <SignIn
@@ -171,21 +170,9 @@ function ClerkQueryClientCacheInvalidator() {
 }
 
 function HomeRedirect() {
-  return (
-    <>
-      <Show when="signed-in"><Redirect to="/dashboard" /></Show>
-      <Show when="signed-out"><Home /></Show>
-    </>
-  );
-}
-
-function DashboardGate() {
-  return (
-    <>
-      <Show when="signed-in"><Dashboard /></Show>
-      <Show when="signed-out"><Redirect to="/" /></Show>
-    </>
-  );
+  const { isLoaded, isSignedIn } = useUser();
+  if (!isLoaded) return <AuthShell><p className="font-mono text-sm">Checking your session…</p></AuthShell>;
+  return <Redirect to={isSignedIn ? "/dashboard" : "/sign-in"} />;
 }
 
 function RoutedErrorBoundary({ children }: { children: ReactNode }) {
@@ -199,24 +186,31 @@ function AppRoutes() {
       <Route path="/sign-in/*?" component={SignInPage} />
       <Route path="/sign-up/*?" component={SignUpPage} />
       <Route path="/bed-break-entry" component={BedBreakEntryPage} />
-      <Route>
-        <Layout>
-          <RoutedErrorBoundary>
-            <Switch>
-              <Route path="/" component={HomeRedirect} />
-              <Route path="/dashboard" component={DashboardGate} />
-              <Route path="/kits" component={Kits} />
-              <Route path="/kits/:id" component={KitDetail} />
-              <Route path="/counter" component={CounterPage} />
-              <Route path="/compare" component={Compare} />
-              <Route path="/guide" component={Guide} />
-              <Route path="/minigame" component={Minigame} />
-              <Route component={NotFound} />
-            </Switch>
-          </RoutedErrorBoundary>
-        </Layout>
-      </Route>
+      <Route path="/" component={HomeRedirect} />
+      <Route component={AuthenticatedRoutes} />
     </Switch>
+  );
+}
+
+function AuthenticatedRoutes() {
+  const { isLoaded, isSignedIn } = useUser();
+  if (!isLoaded) return <AuthShell><p className="font-mono text-sm">Checking your session…</p></AuthShell>;
+  if (!isSignedIn) return <Redirect to="/sign-in" />;
+  return (
+    <Layout>
+      <RoutedErrorBoundary>
+        <Switch>
+          <Route path="/dashboard" component={Dashboard} />
+          <Route path="/kits" component={Kits} />
+          <Route path="/kits/:id" component={KitDetail} />
+          <Route path="/counter" component={CounterPage} />
+          <Route path="/compare" component={Compare} />
+          <Route path="/guide" component={Guide} />
+          <Route path="/minigame" component={Minigame} />
+          <Route component={NotFound} />
+        </Switch>
+      </RoutedErrorBoundary>
+    </Layout>
   );
 }
 

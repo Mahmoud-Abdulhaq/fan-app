@@ -3,19 +3,13 @@ import { Check, Coins, Lock, Play, RotateCcw, Sparkles, Swords } from "lucide-re
 import type { Kit } from "@workspace/api-client-react";
 import { isOwned, unlockPrice, type KitLoadout } from "@/game/abilities";
 import { formatKey, KEYBIND_ACTIONS, KEYBIND_LABELS, type KeybindAction, type MinigameSettings, type TouchMode } from "@/game/settings";
-import type { Difficulty } from "@/game/types";
+import { ARENA_MAPS, type ArenaMapId } from "@/game/maps";
 import { cn } from "@/lib/utils";
-
-export const DIFFICULTY_COPY: Record<Difficulty, { label: string; note: string }> = {
-  rookie: { label: "Rookie", note: "Slow bot, slow swings, never chases diamonds." },
-  standard: { label: "Standard", note: "Bridges with purpose, upgrades with diamonds." },
-  veteran: { label: "Veteran", note: "Full speed, quick bridging, may bring a top-tier kit." },
-};
 
 const TIERS = ["D", "C", "B", "A", "S"] as const;
 
 export function TierBadge({ tier }: { tier: string }) {
-  return <span className="inline-grid h-6 w-6 place-items-center rounded border-2 border-[#B22222] bg-[#f7e2d6] font-display text-xs font-bold">{tier}</span>;
+  return <span className="inline-grid h-6 w-6 place-items-center rounded border-2 border-[#B22222] bg-[#242427] font-display text-xs font-bold">{tier}</span>;
 }
 
 export function KitDossier({ loadout, kit }: { loadout: KitLoadout; kit?: Kit }) {
@@ -29,12 +23,12 @@ export function KitDossier({ loadout, kit }: { loadout: KitLoadout; kit?: Kit })
         <TierBadge tier={loadout.tier} />
       </div>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-md border border-[#B22222]/25 bg-[#fbf4ef] p-3">
+        <div className="rounded-md border border-[#B22222]/25 bg-[#141416] p-3">
           <p className="font-mono text-[10px] uppercase tracking-widest">Passive</p>
           <p className="font-display text-base font-bold">{loadout.passive.name}</p>
           <p className="text-sm">{loadout.passive.summary}</p>
         </div>
-        <div className="rounded-md border-2 border-[#B22222]/50 bg-[#fbf4ef] p-3">
+        <div className="rounded-md border-2 border-[#B22222]/50 bg-[#141416] p-3">
           <p className="flex items-center justify-between font-mono text-[10px] uppercase tracking-widest"><span>Ability / Q</span><span>{loadout.ability.cooldown}s</span></p>
           <p className="font-display text-base font-bold">{loadout.ability.name}</p>
           <p className="text-sm">{loadout.ability.summary}</p>
@@ -58,7 +52,7 @@ export function KitPicker({ kits, loadouts, unlocked, selected, onSelect, onShop
         return (
           <button key={k.id} type="button" onClick={() => (owned ? onSelect(k.id) : onShop())} data-testid={`button-pick-kit-${k.id}`}
             className={cn("group relative rounded-md border px-2.5 py-2 text-left transition-all",
-              active ? "mg-paper border-[#B22222] -translate-y-0.5" : owned ? "border-[#B22222]/35 bg-black/50 hover:-translate-y-0.5 hover:border-[#B22222]" : "border-dashed border-[#B22222]/25 bg-black/30 opacity-70 hover:opacity-100")}>
+              active ? "mg-paper border-[#B22222] bg-[#2c2c2f] -translate-y-0.5" : owned ? "border-[#B22222]/35 bg-black/50 hover:-translate-y-0.5 hover:border-[#B22222]" : "border-dashed border-[#B22222]/25 bg-black/30 opacity-70 hover:opacity-100")}>
             <span className="flex items-center justify-between gap-1">
               <span className="truncate text-sm font-bold">{k.name}</span>
               {owned ? (active ? <Check className="h-3.5 w-3.5 shrink-0" /> : <span className="font-mono text-[10px]">{k.tier}</span>) : <Lock className="h-3.5 w-3.5 shrink-0" />}
@@ -71,13 +65,13 @@ export function KitPicker({ kits, loadouts, unlocked, selected, onSelect, onShop
   );
 }
 
-export function PlayPanel({ loadout, kit, settings, onDifficulty, onPlay, starting, startError, children }: {
-  loadout: KitLoadout | null; kit?: Kit; settings: MinigameSettings; onDifficulty: (d: Difficulty) => void; onPlay: () => void; starting: boolean; startError: boolean; children: ReactNode;
+export function PlayPanel({ loadout, kit, mapId, onMapChange, settings, onPlay, starting, startError, children }: {
+  loadout: KitLoadout | null; kit?: Kit; mapId: ArenaMapId; onMapChange: (id: ArenaMapId) => void; settings: MinigameSettings; onPlay: () => void; starting: boolean; startError: boolean; children: ReactNode;
 }) {
   return (
     <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr]">
       <div className="space-y-4">
-        {loadout ? <KitDossier loadout={loadout} kit={kit} /> : <div className="h-48 animate-pulse rounded-lg bg-[#efe2d8]/20" />}
+        {loadout ? <KitDossier loadout={loadout} kit={kit} /> : <div className="h-48 animate-pulse rounded-lg bg-[#171719]/30" />}
         <div>
           <p className="mb-2 font-mono text-xs uppercase tracking-[0.2em]">Choose loadout</p>
           {children}
@@ -85,19 +79,22 @@ export function PlayPanel({ loadout, kit, settings, onDifficulty, onPlay, starti
       </div>
       <div className="space-y-4">
         <div className="mg-paper rounded-lg p-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.25em]">Opponent</p>
-          <p className="font-display text-xl font-bold">Orange bot</p>
-          <div className="mt-3 grid grid-cols-3 gap-1.5" role="radiogroup" aria-label="Bot difficulty">
-            {(Object.keys(DIFFICULTY_COPY) as Difficulty[]).map((d) => (
-              <button key={d} type="button" role="radio" aria-checked={settings.difficulty === d} onClick={() => onDifficulty(d)} data-testid={`button-difficulty-${d}`}
-                className={cn("rounded-md border px-2 py-1.5 text-sm font-bold transition-colors", settings.difficulty === d ? "border-2 border-[#B22222] bg-[#f7dccf]" : "border-[#B22222]/25 hover:border-[#B22222]/60")}>
-                {DIFFICULTY_COPY[d].label}
+          <p className="font-mono text-[10px] uppercase tracking-[0.25em]">Match</p>
+          <p className="font-display text-xl font-bold">Blue vs Orange bot</p>
+          <p className="mt-1 text-xs">Normal rules every round. No difficulty settings.</p>
+          <p className="mb-2 mt-4 font-mono text-[10px] uppercase tracking-[0.2em]">Choose your map</p>
+          <div className="grid gap-1.5 sm:grid-cols-2" role="radiogroup" aria-label="Arena map">
+            {ARENA_MAPS.map((map) => (
+              <button key={map.id} type="button" role="radio" aria-checked={mapId === map.id} onClick={() => onMapChange(map.id)}
+                data-testid={`button-map-${map.id}`}
+                className={cn("rounded-md border px-2.5 py-2 text-left transition-colors", mapId === map.id ? "border-2 border-[#B22222] bg-[#2c2c2f]" : "border-[#B22222]/25 bg-black/30 hover:border-[#B22222]/60")}>
+                <span className="block text-sm font-bold">{map.name}</span>
+                <span className="block text-[11px]">{map.description}</span>
               </button>
             ))}
           </div>
-          <p className="mt-2 text-xs">{DIFFICULTY_COPY[settings.difficulty].note}</p>
           <button type="button" onClick={onPlay} disabled={!loadout || starting} data-testid="button-play"
-            className="mg-cta mt-5 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-[#B22222] bg-[#f7dccf] px-4 py-3.5 font-display text-xl font-bold uppercase tracking-widest disabled:opacity-60">
+            className="mg-cta mt-5 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-[#B22222] px-4 py-3.5 font-display text-xl font-bold uppercase tracking-widest disabled:opacity-60">
             {starting ? <><RotateCcw className="h-5 w-5 animate-spin" />Opening ticket</> : <><Play className="h-5 w-5" />Play match</>}
           </button>
           {startError && <p className="mt-2 text-center text-xs font-semibold" data-testid="text-start-error">Could not open a match ticket. Check your connection and press Play again.</p>}
@@ -111,10 +108,10 @@ export function PlayPanel({ loadout, kit, settings, onDifficulty, onPlay, starti
 
 export function HowToPlay() {
   const steps = [
-    ["Gather", "Stand on the silver pad at home to scoop iron. Diamonds sit on the side islands, emerald in the middle."],
-    ["Shop", "Press B on your home island: wool blocks, swords, axes. Nothing else."],
+    ["Gather", "Stand by the iron generator beside your base. It creates iron every 50 milliseconds."],
+    ["Shop", "Use the item-shop worker beside your spawn. The match shop sells blocks, swords, and axes."],
     ["Bridge", "Islands float over the void. Place wool on empty tiles next to solid ground to cross."],
-    ["Break", "Walk to the orange bed and hit it with your axe (K). Walls placed on ground can be chopped too."],
+    ["Break", "Cross to the orange bed and use your axe. Controls can be changed in Arena settings."],
     ["Finish", "While your bed stands you respawn. Once it breaks, the next death is final."],
   ];
   return (
@@ -144,7 +141,7 @@ export function KitShopPanel({ kits, loadouts, unlocked, coins, pendingId, onUnl
         <div className="flex gap-1" role="tablist" aria-label="Filter by tier">
           {["all", ...TIERS].map((t) => (
             <button key={t} type="button" onClick={() => setTier(t)} data-testid={`button-filter-tier-${t}`}
-              className={cn("rounded-md border px-2.5 py-1 font-mono text-xs font-bold uppercase", tier === t ? "border-2 border-[#B22222] bg-[#f7dccf]" : "border-[#B22222]/30 bg-black/40")}>{t}</button>
+              className={cn("rounded-md border px-2.5 py-1 font-mono text-xs font-bold uppercase", tier === t ? "border-2 border-[#B22222] bg-[#2c2c2f]" : "border-[#B22222]/30 bg-black/40")}>{t}</button>
           ))}
         </div>
       </div>
@@ -174,7 +171,7 @@ export function KitShopPanel({ kits, loadouts, unlocked, coins, pendingId, onUnl
                   <p className="flex items-center gap-1.5 font-mono text-xs font-bold uppercase tracking-wider" data-testid={`status-owned-${k.id}`}><Check className="h-4 w-4" />{k.tier === "D" ? "Starter kit" : "Owned"}</p>
                 ) : (
                   <button type="button" disabled={short || pendingId !== null} onClick={() => onUnlock(k)} data-testid={`button-unlock-${k.id}`}
-                    className="flex w-full items-center justify-center gap-1.5 rounded-md border-2 border-[#B22222] bg-[#f7dccf] px-3 py-2 text-sm font-bold transition-transform hover:-translate-y-px disabled:translate-y-0 disabled:border-[#B22222]/30 disabled:bg-transparent">
+                    className="flex w-full items-center justify-center gap-1.5 rounded-md border-2 border-[#B22222] bg-[#202023] px-3 py-2 text-sm font-bold transition-transform hover:-translate-y-px disabled:translate-y-0 disabled:border-[#B22222]/30 disabled:bg-transparent">
                     {pendingId === k.id ? <RotateCcw className="h-4 w-4 animate-spin" /> : short ? <Lock className="h-4 w-4" /> : <Coins className="h-4 w-4" />}
                     {pendingId === k.id ? "Unlocking" : short ? `Need ${price - coins} more coins` : `Unlock for ${price}`}
                   </button>
@@ -191,9 +188,9 @@ export function KitShopPanel({ kits, loadouts, unlocked, coins, pendingId, onUnl
 function Toggle({ label, note, value, onChange, id }: { label: string; note: string; value: boolean; onChange: (v: boolean) => void; id: string }) {
   return (
     <button type="button" role="switch" aria-checked={value} onClick={() => onChange(!value)} data-testid={`toggle-${id}`}
-      className="flex w-full items-center justify-between gap-4 rounded-md border border-[#B22222]/20 bg-[#fbf4ef] px-3 py-2.5 text-left hover:border-[#B22222]/60">
+      className="flex w-full items-center justify-between gap-4 rounded-md border border-[#B22222]/20 bg-[#141416] px-3 py-2.5 text-left hover:border-[#B22222]/60">
       <span><span className="block text-sm font-bold">{label}</span><span className="block text-xs">{note}</span></span>
-      <span className={cn("relative h-6 w-11 shrink-0 rounded-full border-2 border-[#B22222] transition-colors", value ? "bg-[#f0bfae]" : "bg-transparent")}>
+      <span className={cn("relative h-6 w-11 shrink-0 rounded-full border-2 border-[#B22222] transition-colors", value ? "bg-[#3a3a3f]" : "bg-transparent")}>
         <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-[#B22222] transition-transform", value ? "translate-x-5" : "translate-x-0.5")} />
       </span>
     </button>
@@ -240,15 +237,6 @@ export function SettingsPanel({ settings, update, reset }: { settings: MinigameS
         <button type="button" onClick={reset} className="flex items-center gap-1 rounded-md border border-[#B22222]/40 px-2.5 py-1 text-xs font-bold" data-testid="button-reset-settings"><RotateCcw className="h-3.5 w-3.5" />Defaults</button>
       </div>
       <p className="text-xs">Saved on this device for your account only. Coins, wins and unlocks live on the server.</p>
-      <div>
-        <p className="mb-1.5 text-sm font-bold">Bot difficulty</p>
-        <div className="grid grid-cols-3 gap-1.5">
-          {(Object.keys(DIFFICULTY_COPY) as Difficulty[]).map((d) => (
-            <button key={d} type="button" onClick={() => update({ difficulty: d })} data-testid={`button-settings-difficulty-${d}`}
-              className={cn("rounded-md border px-2 py-1.5 text-sm font-bold", settings.difficulty === d ? "border-2 border-[#B22222] bg-[#f7dccf]" : "border-[#B22222]/25")}>{DIFFICULTY_COPY[d].label}</button>
-          ))}
-        </div>
-      </div>
       <Toggle id="grid" label="Tile grid" note="Faint outlines on every floor tile for precise bridging." value={settings.showGrid} onChange={(v) => update({ showGrid: v })} />
       <Toggle id="shake" label="Screen shake" note="Camera kick on hits and bed breaks." value={settings.screenShake} onChange={(v) => update({ screenShake: v })} />
       <Toggle id="hints" label="Control card" note="Keep the key reference next to the arena." value={settings.showHints} onChange={(v) => update({ showHints: v })} />
@@ -257,7 +245,7 @@ export function SettingsPanel({ settings, update, reset }: { settings: MinigameS
         <div className="grid grid-cols-3 gap-1.5">
           {(["auto", "on", "off"] as TouchMode[]).map((m) => (
             <button key={m} type="button" onClick={() => update({ touchControls: m })} data-testid={`button-touch-${m}`}
-              className={cn("rounded-md border px-2 py-1.5 text-sm font-bold capitalize", settings.touchControls === m ? "border-2 border-[#B22222] bg-[#f7dccf]" : "border-[#B22222]/25")}>{m}</button>
+              className={cn("rounded-md border px-2 py-1.5 text-sm font-bold capitalize", settings.touchControls === m ? "border-2 border-[#B22222] bg-[#2c2c2f]" : "border-[#B22222]/25")}>{m}</button>
           ))}
         </div>
         <p className="mt-1 text-xs">Auto shows the on-screen pad on touch screens.</p>
@@ -272,7 +260,7 @@ export function SettingsPanel({ settings, update, reset }: { settings: MinigameS
               <button type="button" aria-label={`Change ${KEYBIND_LABELS[action]} key`}
                 aria-pressed={captureAction === action} data-testid={`button-keybind-${action}`}
                 onClick={() => { setKeybindMessage(""); setCaptureAction(captureAction === action ? null : action); }}
-                className={cn("min-w-14 rounded border px-2 py-1 font-mono text-xs font-bold", captureAction === action ? "border-2 border-[#B22222] bg-[#f7dccf]" : "border-[#B22222]/40")}>
+                className={cn("min-w-14 rounded border px-2 py-1 font-mono text-xs font-bold", captureAction === action ? "border-2 border-[#B22222] bg-[#2c2c2f]" : "border-[#B22222]/40")}>
                 {captureAction === action ? "Press key…" : formatKey(settings.keybinds[action])}
               </button>
             </div>

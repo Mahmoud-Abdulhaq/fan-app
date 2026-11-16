@@ -11,7 +11,14 @@ export const GetGameProfileResponse = zod.object({
   "coins": zod.number().int(),
   "games": zod.number().int(),
   "wins": zod.number().int(),
-  "unlocked": zod.array(zod.string())
+  "unlocked": zod.array(zod.string()),
+  "ownedSkins": zod.array(zod.string()),
+  "equippedSkins": zod.object({
+  "sword": zod.string().nullable(),
+  "axe": zod.string().nullable(),
+  "block": zod.string().nullable(),
+  "kit": zod.string().nullable()
+})
 })
 
 
@@ -26,7 +33,14 @@ export const UnlockGameKitResponse = zod.object({
   "coins": zod.number().int(),
   "games": zod.number().int(),
   "wins": zod.number().int(),
-  "unlocked": zod.array(zod.string())
+  "unlocked": zod.array(zod.string()),
+  "ownedSkins": zod.array(zod.string()),
+  "equippedSkins": zod.object({
+  "sword": zod.string().nullable(),
+  "axe": zod.string().nullable(),
+  "block": zod.string().nullable(),
+  "kit": zod.string().nullable()
+})
 })
 
 
@@ -51,7 +65,56 @@ export const FinishGameMatchResponse = zod.object({
   "coins": zod.number().int(),
   "games": zod.number().int(),
   "wins": zod.number().int(),
-  "unlocked": zod.array(zod.string())
+  "unlocked": zod.array(zod.string()),
+  "ownedSkins": zod.array(zod.string()),
+  "equippedSkins": zod.object({
+  "sword": zod.string().nullable(),
+  "axe": zod.string().nullable(),
+  "block": zod.string().nullable(),
+  "kit": zod.string().nullable()
+})
+})
+
+
+export const OpenSkinCrateBody = zod.object({
+  "crate": zod.enum(['swords', 'kits', 'blocks', 'axes'])
+})
+
+export const OpenSkinCrateResponse = zod.object({
+  "skinId": zod.string(),
+  "profile": zod.object({
+  "coins": zod.number().int(),
+  "games": zod.number().int(),
+  "wins": zod.number().int(),
+  "unlocked": zod.array(zod.string()),
+  "ownedSkins": zod.array(zod.string()),
+  "equippedSkins": zod.object({
+  "sword": zod.string().nullable(),
+  "axe": zod.string().nullable(),
+  "block": zod.string().nullable(),
+  "kit": zod.string().nullable()
+})
+})
+})
+
+
+export const EquipGameSkinBody = zod.object({
+  "slot": zod.enum(['sword', 'axe', 'block', 'kit']),
+  "skinId": zod.string().nullable()
+})
+
+export const EquipGameSkinResponse = zod.object({
+  "coins": zod.number().int(),
+  "games": zod.number().int(),
+  "wins": zod.number().int(),
+  "unlocked": zod.array(zod.string()),
+  "ownedSkins": zod.array(zod.string()),
+  "equippedSkins": zod.object({
+  "sword": zod.string().nullable(),
+  "axe": zod.string().nullable(),
+  "block": zod.string().nullable(),
+  "kit": zod.string().nullable()
+})
 })
 
 

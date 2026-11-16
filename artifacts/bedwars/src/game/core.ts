@@ -1,8 +1,10 @@
 import { W, H, VOID, GROUND, BRIDGE, type GameState, type Fighter, type Team, type Bed, type Cell, type ProjectileKind } from "./types";
+import type { ArenaMapId } from "./maps";
+import { blockSkinIndex } from "./cosmetics";
 
-export const SWORD_DMG = [3, 4, 6, 8];
-export const AXE_DMG = [1, 2, 3, 4];
-export const TIER_NAMES = ["Wood", "Stone", "Iron", "Diamond"];
+export const SWORD_DMG = [3, 4, 6];
+export const AXE_DMG = [1, 2, 3];
+export const TIER_NAMES = ["Wood", "Stone", "Iron"];
 export const RADIUS = 0.32;
 export const REACH = 1.8;
 export const BASE_SPEED = 4.2;
@@ -24,8 +26,6 @@ export interface Rect { x0: number; y0: number; x1: number; y1: number }
 export const ISLANDS: { id: string; rect: Rect; home: Team | null }[] = [
   { id: "blue-home", rect: { x0: 1, y0: 4, x1: 6, y1: 10 }, home: "blue" },
   { id: "orange-home", rect: { x0: 33, y0: 4, x1: 38, y1: 10 }, home: "orange" },
-  { id: "diamond-north", rect: { x0: 12, y0: 2, x1: 14, y1: 4 }, home: null },
-  { id: "diamond-south", rect: { x0: 25, y0: 10, x1: 27, y1: 12 }, home: null },
   { id: "center", rect: { x0: 18, y0: 6, x1: 21, y1: 8 }, home: null },
 ];
 
@@ -55,18 +55,37 @@ export function onHomeIsland(f: Fighter) {
   return f.x >= r.x0 && f.x < r.x1 + 1 && f.y >= r.y0 && f.y < r.y1 + 1;
 }
 
-export function buildMap() {
+export function buildMap(mapId: ArenaMapId = "classic") {
   const base = new Uint8Array(W * H);
   const wall = new Uint8Array(W * H);
+  const paint = (x: number, y: number, value: number) => { if (inBounds(x, y)) base[idx(x, y)] = value; };
   for (const { rect: r } of ISLANDS) {
     const trim = r.x1 - r.x0 >= 3 && r.y1 - r.y0 >= 3;
     for (let y = r.y0; y <= r.y1; y++) for (let x = r.x0; x <= r.x1; x++) {
       const corner = (x === r.x0 || x === r.x1) && (y === r.y0 || y === r.y1);
-      if (trim && corner) continue;
-      base[idx(x, y)] = GROUND;
+      if (!trim || !corner) paint(x, y, GROUND);
     }
   }
-  return { base, wall };
+  for (let y = 5; y <= 9; y++) for (let x = 17; x <= 22; x++) paint(x, y, GROUND);
+  if (mapId === "fortress") {
+    for (let y = 4; y <= 6; y++) for (let x = 12; x <= 14; x++) paint(x, y, GROUND);
+    for (let y = 8; y <= 10; y++) for (let x = 25; x <= 27; x++) paint(x, y, GROUND);
+  }
+  const bridge = (x: number, y: number) => paint(x, y, BRIDGE);
+  const routeY = (x: number): number => {
+    if (mapId === "crosswind") return x < 13 ? 6 : x < 19 ? 7 : x < 25 ? 8 : 7;
+    if (mapId === "snake-run") return x < 12 ? 7 : x < 16 ? 6 : x < 20 ? 5 : x < 24 ? 6 : x < 28 ? 7 : 8;
+    return 7;
+  };
+  let previousY = routeY(7);
+  for (let x = 7; x <= 32; x++) {
+    const y = routeY(x);
+    for (let fillY = Math.min(previousY, y); fillY <= Math.max(previousY, y); fillY++) bridge(x, fillY);
+    if (mapId === "twin-bridges") { bridge(x, 6); bridge(x, 8); }
+    if (mapId === "fortress") { bridge(x, 6); bridge(x, 7); bridge(x, 8); }
+    previousY = y;
+  }
+  return { base, wall, wallSkin: new Uint8Array(W * H) };
 }
 
 export function fighterSpeed(s: GameState, f: Fighter) {
@@ -139,7 +158,10 @@ export function placeBlock(s: GameState, f: Fighter, c: Cell, free = false): Pla
   if (!canPlace(s, c)) return "invalid";
   const i = idx(c.x, c.y);
   if (s.base[i] === VOID) s.base[i] = BRIDGE;
-  else s.wall[i] = wallHpFor(f);
+  else {
+    s.wall[i] = wallHpFor(f);
+  }
+  s.wallSkin[i] = blockSkinIndex(f.cosmetics.block);
   if (!free) f.blocks--;
   f.blocksPlaced++;
   burst(s, c.x + 0.5, c.y + 0.5, "#d9bf98", 4);
@@ -163,12 +185,14 @@ export function mineCell(s: GameState, f: Fighter, c: Cell): MineResult {
   const i = idx(c.x, c.y);
   if (inBounds(c.x, c.y) && s.wall[i] > 0) {
     s.wall[i] = Math.max(0, s.wall[i] - dmg);
+    if (s.wall[i] === 0) s.wallSkin[i] = 0;
     burst(s, c.x + 0.5, c.y + 0.5, "#a88d7e", 5);
     return s.wall[i] === 0 ? "broke" : "wall";
   }
   if (baseAt(s, c.x, c.y) === BRIDGE) {
     if (cellOccupied(s, c.x, c.y)) return "occupied";
     s.base[i] = VOID;
+    s.wallSkin[i] = 0;
     burst(s, c.x + 0.5, c.y + 0.5, "#e8cfa8", 6);
     return "bridge";
   }
@@ -228,11 +252,11 @@ export function killFighter(s: GameState, f: Fighter, killer: Fighter | null, ca
   s.shake = Math.max(s.shake, 0.55);
   if (killer && killer !== f) {
     killer.kills++;
-    const loot = [f.iron && `${f.iron} iron`, f.diamond && `${f.diamond} diamond`, f.emerald && `${f.emerald} emerald`].filter(Boolean);
-    killer.iron += f.iron; killer.diamond += f.diamond; killer.emerald += f.emerald;
+    const loot = f.iron ? [`${f.iron} iron`] : [];
+    killer.iron += f.iron;
     if (loot.length && killer.alive) addFloat(s, killer.x, killer.y - 1, `+${loot.join(", ")}`, "#8a6d10");
   }
-  f.iron = 0; f.diamond = 0; f.emerald = 0; f.buffs = {};
+  f.iron = 0; f.buffs = {};
   const how = cause === "void" ? "fell into the void" : cause === "thorns" ? "was cut by thorns" : `was taken down by ${killer ? TEAM_NAME[killer.team] : "the arena"}`;
   if (bedOf(s, f.team).alive) {
     f.respawnAt = s.t + RESPAWN_SECONDS;

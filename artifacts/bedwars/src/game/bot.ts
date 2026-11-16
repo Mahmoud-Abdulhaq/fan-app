@@ -1,12 +1,8 @@
-import { W, H, VOID, type GameState, type Cell, type Input, type ShopItemId, type Difficulty } from "./types";
+import { W, H, VOID, type GameState, type Cell, type Input, type ShopItemId } from "./types";
 import { baseAt, bedAt, bedOf, cellOf, dist, idx, inBounds, onHomeIsland, wallAt } from "./core";
 import { buyStatus } from "./engine";
 
-const DIFF: Record<Difficulty, { think: number; place: number; aggro: number; diamonds: boolean }> = {
-  rookie: { think: 0.5, place: 0.42, aggro: 3.2, diamonds: false },
-  standard: { think: 0.3, place: 0.28, aggro: 4.5, diamonds: true },
-  veteran: { think: 0.18, place: 0.17, aggro: 6, diamonds: true },
-};
+const BOT = { think: 0.3, place: 0.28, aggro: 4.5 };
 
 function stepCost(s: GameState, x: number, y: number) {
   const w = wallAt(s, x, y);
@@ -52,30 +48,25 @@ export function choosePurchase(s: GameState): ShopItemId | null {
   if (me.blocks < 16) order.push("wool8");
   if (me.sword < 1) order.push("sword1");
   if (me.axe < 1) order.push("axe1");
-  order.push("sword2", "sword3", "axe2", "axe3");
+  order.push("sword2", "axe2");
   for (const id of order) if (buyStatus(s, me, id) === "ok") return id;
   return null;
 }
 
 function replan(s: GameState) {
-  const me = s.orange, foe = s.blue, mem = s.bot, cfg = DIFF[s.difficulty];
+  const me = s.orange, foe = s.blue, mem = s.bot;
   const my = cellOf(me), fc = cellOf(foe);
   const myBed = bedOf(s, "orange"), foeBed = bedOf(s, "blue");
   const dFoe = foe.alive ? dist(me.x, me.y, foe.x, foe.y) : Infinity;
   const foeNearBed = myBed.alive && foe.alive && dist(foe.x, foe.y, myBed.x + 0.5, myBed.y + 0.5) < 6;
   const ironGen = s.gens.find((g) => g.kind === "iron" && g.owner === "orange")!;
-  const dGen = s.gens.find((g) => g.kind === "diamond" && g.x > W / 2)!;
-  const eGen = s.gens.find((g) => g.kind === "emerald")!;
   if (me.blocks < 6) mem.gathering = true;
   if (mem.gathering && me.blocks >= 16 && (me.sword >= 1 || s.t > 50)) mem.gathering = false;
-  const wantsUpgrade = (me.diamond >= 2 && me.sword < 2) || (me.emerald >= 2 && me.sword < 3) || (me.diamond >= 3 && me.axe < 3);
   const at = (g: Cell) => (c: Cell) => c.x === g.x && c.y === g.y;
 
   let goal: string; let pred: (c: Cell) => boolean;
-  if (foe.alive && (dFoe < cfg.aggro || foeNearBed)) { goal = "fight"; pred = (c) => Math.abs(c.x - fc.x) + Math.abs(c.y - fc.y) <= 1; }
-  else if (mem.gathering || wantsUpgrade) { goal = "gather"; pred = at(ironGen); }
-  else if (cfg.diamonds && me.sword < 2 && me.diamond < 2 && dGen.stock >= 2) { goal = "diamond"; pred = at(dGen); }
-  else if (cfg.diamonds && me.sword < 3 && me.sword >= 2 && eGen.stock >= 1 && me.emerald < 2) { goal = "emerald"; pred = at(eGen); }
+  if (foe.alive && (dFoe < BOT.aggro || foeNearBed)) { goal = "fight"; pred = (c) => Math.abs(c.x - fc.x) + Math.abs(c.y - fc.y) <= 1; }
+  else if (mem.gathering) { goal = "gather"; pred = at(ironGen); }
   else if (foeBed.alive) { goal = "bed"; pred = (c) => Math.abs(c.x - foeBed.x) + Math.abs(c.y - foeBed.y) === 1; }
   else { goal = "hunt"; pred = (c) => Math.abs(c.x - fc.x) + Math.abs(c.y - fc.y) <= 1; }
   mem.goal = goal;
@@ -83,7 +74,7 @@ function replan(s: GameState) {
 }
 
 export function botThink(s: GameState, dt: number): Input {
-  const me = s.orange, foe = s.blue, mem = s.bot, cfg = DIFF[s.difficulty];
+  const me = s.orange, foe = s.blue, mem = s.bot;
   const input: Input = { mx: 0, my: 0, attack: false, mine: false, aim: null, actions: [] };
   if (!me.alive || s.over) { mem.path = []; mem.thinkT = 0; return input; }
   mem.thinkT -= dt; mem.placeT -= dt; mem.buyT -= dt;
@@ -95,7 +86,7 @@ export function botThink(s: GameState, dt: number): Input {
     const pick = choosePurchase(s);
     if (pick) { input.actions.push({ type: "buy", item: pick }); mem.buyT = 0.5; }
   }
-  if (mem.thinkT <= 0) { mem.thinkT = cfg.think; replan(s); }
+  if (mem.thinkT <= 0) { mem.thinkT = BOT.think; replan(s); }
 
   if (dFoe <= 1.5 + (me.kit.category === "Ranged" ? 0.5 : 0)) input.attack = true;
 
@@ -128,7 +119,7 @@ export function botThink(s: GameState, dt: number): Input {
 
   if (baseAt(s, n.x, n.y) === VOID) {
     if (me.blocks > 0) {
-      if (mem.placeT <= 0) { input.actions.push({ type: "place" }); mem.placeT = cfg.place; }
+      if (mem.placeT <= 0) { input.actions.push({ type: "place" }); mem.placeT = BOT.place; }
       input.aim = n;
     } else { mem.gathering = true; mem.thinkT = 0; }
     input.mx = (my.x + 0.5 - me.x) * 2; input.my = (my.y + 0.5 - me.y) * 2;

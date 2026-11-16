@@ -4,7 +4,6 @@ import { ArrowRight, Flame, Trophy, Crown } from "lucide-react";
 import { useGetDashboard, type Kit } from "@workspace/api-client-react";
 import { useKits, usePageMeta, usePrefs, CATEGORY_STYLE, type Category } from "@/lib/bw";
 import { CategoryBadge, ErrorState, KitCard, KitGridSkeleton, KitName, RatingReadout, SnapshotNote, TierBadge } from "@/components/bw";
-import { TriviaCard } from "@/components/trivia";
 import { cn } from "@/lib/utils";
 
 export function FeaturedKit({ kit }: { kit: Kit }) {
@@ -51,7 +50,7 @@ export function KitList({ title, icon, ids, map, empty }: { title: string; icon:
 }
 
 export default function Home() {
-  usePageMeta("Kit picks before the next match", "Pick the right Roblox BedWars kit fast: tiers, counters, comparisons and a daily trivia question.");
+  usePageMeta("Kit picks before the next match", "Pick the right Roblox BedWars kit fast: tiers, counters and comparisons.");
   const dash = useGetDashboard();
   const { kits, map, isLoading, isError, refetch } = useKits();
   const { mode } = usePrefs();
@@ -90,10 +89,9 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="mt-10 grid gap-5 lg:grid-cols-3">
+      <div className="mt-10 grid gap-5 lg:grid-cols-2">
         <KitList title="Trending" icon={<Flame className="h-5 w-5 text-red-400" />} ids={dash.data?.trending ?? []} map={map} empty="Trending fills in as players rate kits." />
         <KitList title="Top rated" icon={<Trophy className="h-5 w-5 text-yellow-300" />} ids={dash.data?.topRated ?? []} map={map} empty="No ratings yet. Be the first to rate a kit." />
-        <TriviaCard />
       </div>
       {dash.data && (
         <p className="mt-3 font-mono text-xs text-muted-foreground" data-testid="text-total-ratings">

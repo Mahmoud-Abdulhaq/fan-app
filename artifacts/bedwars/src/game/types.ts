@@ -1,4 +1,5 @@
 import type { KitLoadout } from "./abilities";
+import type { ArenaMapId } from "./maps";
 
 export const W = 40;
 export const H = 15;
@@ -9,12 +10,12 @@ export const GROUND = 1;
 export const BRIDGE = 2;
 
 export type Team = "blue" | "orange";
-export type Difficulty = "rookie" | "standard" | "veteran";
+export interface EquippedSkins { sword: string | null; axe: string | null; block: string | null; kit: string | null }
 
 export interface Cell { x: number; y: number }
 
-export type ShopItemId = "wool8" | "wool20" | "sword1" | "sword2" | "sword3" | "axe1" | "axe2" | "axe3";
-export interface Cost { iron?: number; diamond?: number; emerald?: number }
+export type ShopItemId = "wool8" | "wool20" | "sword1" | "sword2" | "axe1" | "axe2";
+export interface Cost { iron?: number }
 
 export type Action = { type: "place" } | { type: "ability" } | { type: "buy"; item: ShopItemId };
 
@@ -43,8 +44,8 @@ export interface Fighter {
   axe: number;
   blocks: number;
   iron: number;
-  diamond: number;
-  emerald: number;
+  cosmetics: EquippedSkins;
+  swingWeapon: "sword" | "axe";
   attackCd: number;
   mineCd: number;
   abilityCd: number;
@@ -65,7 +66,7 @@ export interface Fighter {
 
 export interface Bed { team: Team; x: number; y: number; hp: number; maxHp: number; alive: boolean; hitT: number }
 
-export type GenKind = "iron" | "diamond" | "emerald";
+export type GenKind = "iron";
 export interface Generator { kind: GenKind; x: number; y: number; interval: number; timer: number; stock: number; cap: number; owner: Team | null }
 
 export type ProjectileKind = "arrow" | "fire" | "frost";
@@ -81,6 +82,7 @@ export interface GameState {
   t: number;
   base: Uint8Array;
   wall: Uint8Array;
+  wallSkin: Uint8Array;
   blue: Fighter;
   orange: Fighter;
   beds: Bed[];
@@ -92,7 +94,7 @@ export interface GameState {
   over: { winner: Team; at: number } | null;
   suddenDeath: boolean;
   shake: number;
-  difficulty: Difficulty;
+  mapId: ArenaMapId;
   bot: BotMemory;
   seed: number;
 }

@@ -1,6 +1,7 @@
 import { Axe, Bed, Box, Heart, Sparkles, Sword, Timer } from "lucide-react";
 import type { HudSnapshot } from "@/game/engine";
 import type { KitLoadout } from "@/game/abilities";
+import { formatKey, type MinigameSettings } from "@/game/settings";
 import { cn } from "@/lib/utils";
 
 const fmt = (t: number) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
@@ -48,15 +49,15 @@ export function HudTop({ hud, botKit }: { hud: HudSnapshot; botKit: KitLoadout }
   );
 }
 
-export function HudBottom({ hud, kit, onAbility, onShop }: { hud: HudSnapshot; kit: KitLoadout; onAbility: () => void; onShop: () => void }) {
+export function HudBottom({ hud, kit, keybinds, onAbility, onShop }: {
+  hud: HudSnapshot; kit: KitLoadout; keybinds: MinigameSettings["keybinds"]; onAbility: () => void; onShop: () => void;
+}) {
   const ready = hud.abilityCd <= 0;
   const pct = ready ? 1 : 1 - hud.abilityCd / hud.abilityMax;
   return (
     <div className="mg-paper flex flex-wrap items-center gap-x-4 gap-y-2 rounded-b-lg px-3 py-2" data-testid="hud-bottom">
       <div className="flex items-center gap-3 font-mono text-xs">
         <span className="flex items-center gap-1" data-testid="text-iron"><span className="h-2.5 w-2.5 rotate-45 bg-[#cdd2da] ring-1 ring-[#B22222]/40" />{hud.iron}</span>
-        <span className="flex items-center gap-1" data-testid="text-diamond"><span className="h-2.5 w-2.5 rotate-45 bg-[#5fd0e2] ring-1 ring-[#B22222]/40" />{hud.diamond}</span>
-        <span className="flex items-center gap-1" data-testid="text-emerald"><span className="h-2.5 w-2.5 rotate-45 bg-[#35c17a] ring-1 ring-[#B22222]/40" />{hud.emerald}</span>
       </div>
       <div className="flex items-center gap-3 text-xs font-semibold">
         <span className={cn("flex items-center gap-1", hud.blocks === 0 && "mg-blink")} data-testid="text-blocks"><Box className="h-3.5 w-3.5" />{hud.blocks}</span>
@@ -65,13 +66,13 @@ export function HudBottom({ hud, kit, onAbility, onShop }: { hud: HudSnapshot; k
       </div>
       <div className="ml-auto flex items-center gap-2">
         <button type="button" onClick={onShop} data-testid="button-open-shop"
-          className={cn("rounded-md border px-2.5 py-1.5 text-xs font-bold", hud.onHome ? "border-[#B22222] bg-[#fbf4ef]" : "border-[#B22222]/30")}>
-          Shop <kbd className="font-mono text-[10px]">B</kbd>{hud.discount && <span className="ml-1 font-mono text-[10px]">-35%</span>}
+          className={cn("rounded-md border px-2.5 py-1.5 text-xs font-bold", hud.onHome ? "border-[#B22222] bg-[#252528]" : "border-[#B22222]/30")}>
+          Shop <kbd className="font-mono text-[10px]">{formatKey(keybinds.shop)}</kbd>{hud.discount && <span className="ml-1 font-mono text-[10px]">-35%</span>}
         </button>
         <button type="button" onClick={onAbility} data-testid="button-ability" title={kit.ability.summary}
-          className={cn("relative overflow-hidden rounded-md border px-2.5 py-1.5 text-xs font-bold transition-transform", ready ? "border-[#B22222] bg-[#fbf4ef] mg-ready" : "border-[#B22222]/30")}>
+          className={cn("relative overflow-hidden rounded-md border px-2.5 py-1.5 text-xs font-bold transition-transform", ready ? "border-[#B22222] bg-[#252528] mg-ready" : "border-[#B22222]/30")}>
           <span className="absolute inset-y-0 left-0 bg-[#B22222]/12" style={{ width: `${pct * 100}%` }} />
-          <span className="relative flex items-center gap-1"><Sparkles className="h-3.5 w-3.5" />{kit.ability.name} <kbd className="font-mono text-[10px]">{ready ? "Q" : `${hud.abilityCd.toFixed(1)}s`}</kbd></span>
+          <span className="relative flex items-center gap-1"><Sparkles className="h-3.5 w-3.5" />{kit.ability.name} <kbd className="font-mono text-[10px]">{ready ? formatKey(keybinds.ability) : `${hud.abilityCd.toFixed(1)}s`}</kbd></span>
         </button>
       </div>
       {hud.buffs.length > 0 && (

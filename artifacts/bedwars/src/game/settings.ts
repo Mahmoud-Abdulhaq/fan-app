@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Difficulty } from "./types";
+import type { ArenaMapId } from "./maps";
 
 export type TouchMode = "auto" | "on" | "off";
 export const KEYBIND_ACTIONS = ["up", "down", "left", "right", "attack", "mine", "place", "ability", "shop", "pause"] as const;
@@ -31,17 +31,17 @@ function isBindableCode(code: unknown): code is string {
 }
 
 export interface MinigameSettings {
-  difficulty: Difficulty;
   showGrid: boolean;
   screenShake: boolean;
   showHints: boolean;
   touchControls: TouchMode;
   kitId: string | null;
   keybinds: Keybinds;
+  mapId: ArenaMapId;
 }
 
 export const DEFAULT_SETTINGS: MinigameSettings = {
-  difficulty: "standard", showGrid: false, screenShake: true, showHints: true, touchControls: "auto", kitId: null, keybinds: DEFAULT_KEYBINDS,
+  showGrid: false, screenShake: true, showHints: true, touchControls: "auto", kitId: null, keybinds: DEFAULT_KEYBINDS, mapId: "classic",
 };
 
 export const settingsKey = (userId: string) => `bw.minigame.settings.v1.${userId}`;
@@ -49,7 +49,6 @@ export const settingsKey = (userId: string) => `bw.minigame.settings.v1.${userId
 /** Pure: validate an unknown JSON value into settings. Only preferences live here, never progress. */
 export function parseSettings(raw: unknown): MinigameSettings {
   const o = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
-  const d = o.difficulty;
   const t = o.touchControls;
   const savedKeys = o.keybinds && typeof o.keybinds === "object" ? o.keybinds as Record<string, unknown> : {};
   const keybinds = {} as Keybinds;
@@ -75,13 +74,13 @@ export function parseSettings(raw: unknown): MinigameSettings {
     }
   }
   return {
-    difficulty: d === "rookie" || d === "standard" || d === "veteran" ? d : DEFAULT_SETTINGS.difficulty,
     showGrid: typeof o.showGrid === "boolean" ? o.showGrid : DEFAULT_SETTINGS.showGrid,
     screenShake: typeof o.screenShake === "boolean" ? o.screenShake : DEFAULT_SETTINGS.screenShake,
     showHints: typeof o.showHints === "boolean" ? o.showHints : DEFAULT_SETTINGS.showHints,
     touchControls: t === "auto" || t === "on" || t === "off" ? t : DEFAULT_SETTINGS.touchControls,
     kitId: typeof o.kitId === "string" ? o.kitId : null,
     keybinds,
+    mapId: o.mapId === "classic" || o.mapId === "crosswind" || o.mapId === "twin-bridges" || o.mapId === "snake-run" || o.mapId === "fortress" ? o.mapId as ArenaMapId : DEFAULT_SETTINGS.mapId,
   };
 }
 
