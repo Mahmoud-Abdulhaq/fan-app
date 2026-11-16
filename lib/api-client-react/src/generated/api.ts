@@ -27,6 +27,11 @@ import type {
   Counter,
   CounterInput,
   Dashboard,
+  DemoAdminActionInput,
+  DemoAdminLockResult,
+  DemoAdminPinInput,
+  DemoAdminSession,
+  DemoAdminSessionInput,
   EquipSkinInput,
   GameKitInput,
   GameProfile,
@@ -169,6 +174,252 @@ export function useGetGameProfile<TData = Awaited<ReturnType<typeof getGameProfi
 
 
 
+
+export const getUnlockDemoAdminUrl = () => {
+
+
+
+
+  return `/api/minigame/admin/unlock`
+}
+
+export const unlockDemoAdmin = async (demoAdminPinInput: DemoAdminPinInput, options?: Parameters<typeof customFetch>[1]): Promise<DemoAdminSession> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<DemoAdminSession>(getUnlockDemoAdminUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(demoAdminPinInput)
+  }
+);}
+
+
+
+
+
+export const getUnlockDemoAdminMutationKey = () => ['unlockDemoAdmin'] as const;
+
+export const getUnlockDemoAdminMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unlockDemoAdmin>>, TError,UnlockDemoAdminMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unlockDemoAdmin>>, TError,UnlockDemoAdminMutationVariables, TContext> => {
+
+const mutationKey = getUnlockDemoAdminMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unlockDemoAdmin>>, UnlockDemoAdminMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  unlockDemoAdmin(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnlockDemoAdminMutationResult = NonNullable<Awaited<ReturnType<typeof unlockDemoAdmin>>>
+    export type UnlockDemoAdminMutationBody = BodyType<DemoAdminPinInput>
+    export type UnlockDemoAdminMutationError = ErrorType<unknown>
+    export type UnlockDemoAdminMutationVariables = {data: BodyType<DemoAdminPinInput>}
+
+    export const useUnlockDemoAdmin = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unlockDemoAdmin>>, TError,UnlockDemoAdminMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof unlockDemoAdmin>>,
+        TError,
+        UnlockDemoAdminMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUnlockDemoAdminMutationOptions(options), queryClient);
+    }
+
+export const getPerformDemoAdminActionUrl = () => {
+
+
+
+
+  return `/api/minigame/admin/action`
+}
+
+export const performDemoAdminAction = async (demoAdminActionInput: DemoAdminActionInput, options?: Parameters<typeof customFetch>[1]): Promise<GameProfile> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GameProfile>(getPerformDemoAdminActionUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(demoAdminActionInput)
+  }
+);}
+
+
+
+
+
+export const getPerformDemoAdminActionMutationKey = () => ['performDemoAdminAction'] as const;
+
+export const getPerformDemoAdminActionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof performDemoAdminAction>>, TError,PerformDemoAdminActionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof performDemoAdminAction>>, TError,PerformDemoAdminActionMutationVariables, TContext> => {
+
+const mutationKey = getPerformDemoAdminActionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof performDemoAdminAction>>, PerformDemoAdminActionMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  performDemoAdminAction(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PerformDemoAdminActionMutationResult = NonNullable<Awaited<ReturnType<typeof performDemoAdminAction>>>
+    export type PerformDemoAdminActionMutationBody = BodyType<DemoAdminActionInput>
+    export type PerformDemoAdminActionMutationError = ErrorType<unknown>
+    export type PerformDemoAdminActionMutationVariables = {data: BodyType<DemoAdminActionInput>}
+
+    export const usePerformDemoAdminAction = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof performDemoAdminAction>>, TError,PerformDemoAdminActionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof performDemoAdminAction>>,
+        TError,
+        PerformDemoAdminActionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPerformDemoAdminActionMutationOptions(options), queryClient);
+    }
+
+export const getLockDemoAdminUrl = () => {
+
+
+
+
+  return `/api/minigame/admin/lock`
+}
+
+export const lockDemoAdmin = async (demoAdminSessionInput: DemoAdminSessionInput, options?: Parameters<typeof customFetch>[1]): Promise<DemoAdminLockResult> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<DemoAdminLockResult>(getLockDemoAdminUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(demoAdminSessionInput)
+  }
+);}
+
+
+
+
+
+export const getLockDemoAdminMutationKey = () => ['lockDemoAdmin'] as const;
+
+export const getLockDemoAdminMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof lockDemoAdmin>>, TError,LockDemoAdminMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof lockDemoAdmin>>, TError,LockDemoAdminMutationVariables, TContext> => {
+
+const mutationKey = getLockDemoAdminMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof lockDemoAdmin>>, LockDemoAdminMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  lockDemoAdmin(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LockDemoAdminMutationResult = NonNullable<Awaited<ReturnType<typeof lockDemoAdmin>>>
+    export type LockDemoAdminMutationBody = BodyType<DemoAdminSessionInput>
+    export type LockDemoAdminMutationError = ErrorType<unknown>
+    export type LockDemoAdminMutationVariables = {data: BodyType<DemoAdminSessionInput>}
+
+    export const useLockDemoAdmin = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof lockDemoAdmin>>, TError,LockDemoAdminMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof lockDemoAdmin>>,
+        TError,
+        LockDemoAdminMutationVariables,
+        TContext
+      > => {
+      return useMutation(getLockDemoAdminMutationOptions(options), queryClient);
+    }
 
 export const getUnlockGameKitUrl = () => {
 

@@ -4,6 +4,7 @@ import { useClerk, useUser, Show } from "@clerk/react";
 import { LayoutGrid, Shield, GitCompare, BookOpen, LogOut, Gauge, Swords } from "lucide-react";
 import { MODES, TEAMS, SOLO_DOUBLES_TEAMS, usePrefs, SNAPSHOT_LABEL } from "@/lib/bw";
 import { cn } from "@/lib/utils";
+import { AdminPanel } from "@/components/admin-panel";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -87,6 +88,7 @@ export function Layout({ children }: { children: ReactNode }) {
           </nav>
           <div className="ml-auto flex items-center gap-3">
             <div className="hidden lg:block"><Selectors /></div>
+            <Show when="signed-in"><AdminPanel /></Show>
             <Show when="signed-in"><UserChip /></Show>
             <Show when="signed-out">
               <Link href="/sign-in" data-testid="link-sign-in" className="text-sm font-semibold text-muted-foreground hover:text-foreground">Sign in</Link>

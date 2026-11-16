@@ -22,6 +22,59 @@ export const GetGameProfileResponse = zod.object({
 })
 
 
+export const unlockDemoAdminBodyPinMax = 32;
+
+
+
+export const UnlockDemoAdminBody = zod.object({
+  "pin": zod.string().min(1).max(unlockDemoAdminBodyPinMax)
+})
+
+export const UnlockDemoAdminResponse = zod.object({
+  "token": zod.string(),
+  "expiresInSeconds": zod.number().int()
+})
+
+
+
+export const performDemoAdminActionBodyAmountMin = 0;
+export const performDemoAdminActionBodyAmountMax = 2147483647;
+
+
+
+export const PerformDemoAdminActionBody = zod.object({
+  "token": zod.string().min(1),
+  "action": zod.enum(['grantCoins', 'setCoins', 'resetStats', 'unlockAllKits']),
+  "amount": zod.number().int().min(performDemoAdminActionBodyAmountMin).max(performDemoAdminActionBodyAmountMax).optional()
+})
+
+export const PerformDemoAdminActionResponse = zod.object({
+  "coins": zod.number().int(),
+  "games": zod.number().int(),
+  "wins": zod.number().int(),
+  "unlocked": zod.array(zod.string()),
+  "ownedSkins": zod.array(zod.string()),
+  "equippedSkins": zod.object({
+  "sword": zod.string().nullable(),
+  "axe": zod.string().nullable(),
+  "block": zod.string().nullable(),
+  "kit": zod.string().nullable()
+})
+})
+
+
+
+
+
+export const LockDemoAdminBody = zod.object({
+  "token": zod.string().min(1)
+})
+
+export const LockDemoAdminResponse = zod.object({
+  "locked": zod.boolean()
+})
+
+
 
 
 

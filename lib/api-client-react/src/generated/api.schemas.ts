@@ -24,6 +24,49 @@ export interface GameProfile {
   equippedSkins: GameProfileEquippedSkins;
 }
 
+export interface DemoAdminPinInput {
+  /**
+     * @minLength 1
+     * @maxLength 32
+     */
+  pin: string;
+}
+
+export interface DemoAdminSession {
+  token: string;
+  expiresInSeconds: number;
+}
+
+export interface DemoAdminSessionInput {
+  /** @minLength 1 */
+  token: string;
+}
+
+export interface DemoAdminLockResult {
+  locked: boolean;
+}
+
+export type DemoAdminActionInputAction = typeof DemoAdminActionInputAction[keyof typeof DemoAdminActionInputAction];
+
+
+export const DemoAdminActionInputAction = {
+  grantCoins: 'grantCoins',
+  setCoins: 'setCoins',
+  resetStats: 'resetStats',
+  unlockAllKits: 'unlockAllKits',
+} as const;
+
+export interface DemoAdminActionInput {
+  /** @minLength 1 */
+  token: string;
+  action: DemoAdminActionInputAction;
+  /**
+     * @minimum 0
+     * @maximum 2147483647
+     */
+  amount?: number;
+}
+
 export type SkinCrateInputCrate = typeof SkinCrateInputCrate[keyof typeof SkinCrateInputCrate];
 
 

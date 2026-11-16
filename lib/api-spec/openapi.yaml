@@ -12,6 +12,54 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GameProfile"
+  /minigame/admin/unlock:
+    post:
+      operationId: unlockDemoAdmin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DemoAdminPinInput"
+      responses:
+        "200":
+          description: Short-lived demo admin session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoAdminSession"
+  /minigame/admin/action:
+    post:
+      operationId: performDemoAdminAction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DemoAdminActionInput"
+      responses:
+        "200":
+          description: Updated signed-in user's minigame profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameProfile"
+  /minigame/admin/lock:
+    post:
+      operationId: lockDemoAdmin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DemoAdminSessionInput"
+      responses:
+        "200":
+          description: Demo admin session revoked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoAdminLockResult"
   /minigame/unlock:
     post:
       operationId: unlockGameKit
@@ -302,6 +350,36 @@ components:
             axe: { type: ["string", "null"] }
             block: { type: ["string", "null"] }
             kit: { type: ["string", "null"] }
+    DemoAdminPinInput:
+      type: object
+      required: [pin]
+      properties:
+        pin: { type: string, minLength: 1, maxLength: 32 }
+    DemoAdminSession:
+      type: object
+      required: [token, expiresInSeconds]
+      properties:
+        token: { type: string }
+        expiresInSeconds: { type: integer }
+    DemoAdminSessionInput:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string, minLength: 1 }
+    DemoAdminLockResult:
+      type: object
+      required: [locked]
+      properties:
+        locked: { type: boolean }
+    DemoAdminActionInput:
+      type: object
+      required: [token, action]
+      properties:
+        token: { type: string, minLength: 1 }
+        action:
+          type: string
+          enum: [grantCoins, setCoins, resetStats, unlockAllKits]
+        amount: { type: integer, minimum: 0, maximum: 2147483647 }
     SkinCrateInput:
       type: object
       required: [crate]

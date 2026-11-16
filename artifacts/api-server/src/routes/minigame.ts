@@ -1,6 +1,6 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
 import { getAuth } from "@clerk/express";
-import { randomInt, randomUUID } from "node:crypto";
+import { randomBytes, randomInt, randomUUID } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 import { db, gameProfilesTable, gameMatchesTable, kitsTable, usersTable } from "@workspace/db";
 import * as V from "@workspace/api-zod";
@@ -19,6 +19,13 @@ const staticSkinSlots: Record<string, "sword" | "axe" | "block"> = {
 };
 const emptyEquipped = { sword: null, axe: null, block: null, kit: null };
 const userId = (req: Request) => getAuth(req).userId!;
+const DEMO_ADMIN_PIN = "123";
+const ADMIN_SESSION_TTL_MS = 30 * 60 * 1000;
+const MAX_FAILED_PIN_ATTEMPTS = 5;
+const PIN_LOCKOUT_MS = 10 * 60 * 1000;
+const MAX_COINS = 2_147_483_647;
+const adminSessions = new Map<string, { userId: string; expiresAt: number }>();
+const failedPinAttempts = new Map<string, { count: number; expiresAt: number }>();
 
 function kitSkinId(id: string) { return `kit-${id}`; }
 
@@ -38,6 +45,90 @@ router.use("/minigame", async (req: Request, res: Response, next: NextFunction):
   await db.insert(usersTable).values({ id }).onConflictDoNothing();
   await db.insert(gameProfilesTable).values({ userId: id }).onConflictDoNothing();
   next();
+});
+
+router.post("/minigame/admin/unlock", async (req, res): Promise<void> => {
+  const parsed = V.UnlockDemoAdminBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: "Enter the demo PIN." }); return; }
+
+  const id = userId(req);
+  const now = Date.now();
+  const attempts = failedPinAttempts.get(id);
+  if (attempts && attempts.expiresAt <= now) failedPinAttempts.delete(id);
+  const activeAttempts = failedPinAttempts.get(id);
+  if (activeAttempts && activeAttempts.count >= MAX_FAILED_PIN_ATTEMPTS) {
+    res.status(429).json({ error: "Too many attempts. Try again in 10 minutes." });
+    return;
+  }
+
+  if (parsed.data.pin !== DEMO_ADMIN_PIN) {
+    const nextCount = (activeAttempts?.count ?? 0) + 1;
+    failedPinAttempts.set(id, { count: nextCount, expiresAt: now + PIN_LOCKOUT_MS });
+    res.status(401).json({ error: "That PIN is not correct." });
+    return;
+  }
+
+  failedPinAttempts.delete(id);
+  for (const [token, session] of adminSessions) {
+    if (session.expiresAt <= now) adminSessions.delete(token);
+  }
+  const token = randomBytes(32).toString("base64url");
+  adminSessions.set(token, { userId: id, expiresAt: now + ADMIN_SESSION_TTL_MS });
+  res.json(V.UnlockDemoAdminResponse.parse({ token, expiresInSeconds: ADMIN_SESSION_TTL_MS / 1000 }));
+});
+
+router.post("/minigame/admin/action", async (req, res): Promise<void> => {
+  const parsed = V.PerformDemoAdminActionBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: "Choose a valid admin action." }); return; }
+
+  const id = userId(req);
+  const session = adminSessions.get(parsed.data.token);
+  if (!session || session.userId !== id || session.expiresAt <= Date.now()) {
+    if (session?.expiresAt && session.expiresAt <= Date.now()) adminSessions.delete(parsed.data.token);
+    res.status(401).json({ error: "Admin access expired. Enter the PIN again." });
+    return;
+  }
+
+  const { action, amount } = parsed.data;
+  if ((action === "grantCoins" || action === "setCoins") && amount === undefined) {
+    res.status(400).json({ error: "Enter a coin amount." });
+    return;
+  }
+  if (action === "grantCoins" && amount === 0) {
+    res.status(400).json({ error: "Grant at least 1 coin." });
+    return;
+  }
+
+  const allKitIds = action === "unlockAllKits"
+    ? (await db.select({ id: kitsTable.id }).from(kitsTable)).map((kit) => kit.id)
+    : [];
+  const error = await db.transaction(async (tx) => {
+    const [row] = await tx.select().from(gameProfilesTable).where(eq(gameProfilesTable.userId, id)).for("update");
+    if (!row) return "Game profile not found.";
+
+    if (action === "grantCoins") {
+      if (row.coins + amount! > MAX_COINS) return "That would exceed the maximum coin balance.";
+      await tx.update(gameProfilesTable).set({ coins: row.coins + amount! }).where(eq(gameProfilesTable.userId, id));
+    } else if (action === "setCoins") {
+      await tx.update(gameProfilesTable).set({ coins: amount! }).where(eq(gameProfilesTable.userId, id));
+    } else if (action === "resetStats") {
+      await tx.update(gameProfilesTable).set({ games: 0, wins: 0 }).where(eq(gameProfilesTable.userId, id));
+    } else {
+      await tx.update(gameProfilesTable).set({ unlocked: [...new Set([...row.unlocked, ...allKitIds])] }).where(eq(gameProfilesTable.userId, id));
+    }
+    return null;
+  });
+
+  if (error) { res.status(400).json({ error }); return; }
+  res.json(await profile(id));
+});
+
+router.post("/minigame/admin/lock", async (req, res): Promise<void> => {
+  const parsed = V.LockDemoAdminBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: "Invalid admin session." }); return; }
+  const session = adminSessions.get(parsed.data.token);
+  if (session?.userId === userId(req)) adminSessions.delete(parsed.data.token);
+  res.json(V.LockDemoAdminResponse.parse({ locked: true }));
 });
 
 async function profile(id: string) {
