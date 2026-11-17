@@ -194,7 +194,7 @@ export function GameView({ playerKit, botKit, mapId, equippedSkins, settings, on
             <div className="pointer-events-none absolute inset-0 grid place-items-center">
               <div className="mg-paper mg-pop rounded-lg px-5 py-3 text-center" data-testid="overlay-respawn">
                 <p className="font-display text-xl font-bold uppercase">You fell</p>
-                <p className="font-mono text-xs">Bed standing. Respawning in {hud.respawnIn?.toFixed(1)}s</p>
+                <p className="font-mono text-xs">Bed standing. Respawning now</p>
               </div>
             </div>
           )}

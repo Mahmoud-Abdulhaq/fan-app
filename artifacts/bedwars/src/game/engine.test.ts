@@ -51,8 +51,10 @@ const tick = (s: ReturnType<typeof game>, seconds: number, bot = false) => {
   assert.equal(s.base[idx(7, 7)], 2, "bridge creates walkable ground");
   assert.equal(placeBlock(s, s.blue, { x: 10, y: 0 }), "invalid", "floating disconnected blocks forbidden");
   killFighter(s, s.blue, null, "void");
-  tick(s, 4);
-  assert.equal(s.blue.alive, true, "living bed allows respawn");
+  assert.equal(s.blue.respawnAt, s.t, "standing bed schedules respawn with no wait");
+  step(s, { blue: emptyInput(), orange: emptyInput() }, STEP);
+  assert.equal(s.blue.alive, true, "living bed respawns on the next simulation tick");
+  assert.equal(s.blue.respawnAt, null, "instant respawn clears the respawn timer");
   destroyBed(s, bedOf(s, "blue"), s.orange);
   killFighter(s, s.blue, s.orange, "sword");
   checkWinner(s);

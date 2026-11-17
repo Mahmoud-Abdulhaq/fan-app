@@ -40,7 +40,7 @@ export function HudTop({ hud, botKit }: { hud: HudSnapshot; botKit: KitLoadout }
       <div className="min-w-0 text-right">
         <p className="flex items-center justify-end gap-1.5 font-display text-xs font-bold uppercase tracking-widest">Orange / Bot<span className="h-2.5 w-2.5 rounded-sm bg-[#ec7a22]" /></p>
         <div className="mt-1 flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
-          <span className="font-mono text-xs" data-testid="text-bot-hp">{hud.bot.eliminated ? "OUT" : hud.bot.alive ? `${hud.bot.hp}/${hud.bot.maxHp}` : `respawn ${hud.bot.respawnIn?.toFixed(1)}`}</span>
+          <span className="font-mono text-xs" data-testid="text-bot-hp">{hud.bot.eliminated ? "OUT" : hud.bot.alive ? `${hud.bot.hp}/${hud.bot.maxHp}` : "respawning"}</span>
           <BedPips {...orangeBed} />
         </div>
         <p className="truncate font-mono text-[9px] uppercase tracking-wider">{botKit.kitName} / {botKit.ability.name}</p>
