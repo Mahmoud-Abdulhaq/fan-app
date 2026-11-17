@@ -97,11 +97,13 @@ export function AdminPanel() {
         variant="outline"
         size="sm"
         onClick={() => setOpen(true)}
+        title="Open admin panel"
+        aria-label="Open admin panel"
         className="h-8 gap-1.5 border-[#642525] bg-[#0d0909] px-2 text-[#B22222] hover:bg-[#201719] hover:text-[#B22222] sm:px-3"
         data-testid="button-admin-panel"
       >
         <Shield className="h-4 w-4" />
-        <span className="hidden sm:inline">Admin</span>
+        <span>Admin</span>
       </Button>
       {open && (
         <div

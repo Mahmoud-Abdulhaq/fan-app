@@ -88,7 +88,7 @@ export function Layout({ children }: { children: ReactNode }) {
           </nav>
           <div className="ml-auto flex items-center gap-3">
             <div className="hidden lg:block"><Selectors /></div>
-            <Show when="signed-in"><AdminPanel /></Show>
+            <AdminPanel />
             <Show when="signed-in"><UserChip /></Show>
             <Show when="signed-out">
               <Link href="/sign-in" data-testid="link-sign-in" className="text-sm font-semibold text-muted-foreground hover:text-foreground">Sign in</Link>
