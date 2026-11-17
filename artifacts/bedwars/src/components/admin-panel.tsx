@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePerformDemoAdminAction, useUnlockDemoAdmin, useLockDemoAdmin, getGetGameProfileQueryKey, type DemoAdminActionInputAction } from "@workspace/api-client-react";
 import { Shield, Coins, RotateCcw, Unlock, LockKeyhole, X } from "lucide-react";
@@ -12,6 +12,7 @@ function errorMessage(error: unknown) {
 }
 
 export function AdminPanel() {
+  const panelRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [pin, setPin] = useState("");
   const [token, setToken] = useState<string | null>(null);
@@ -38,8 +39,15 @@ export function AdminPanel() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") handleOpenChange(false);
     };
+    const onPointerDown = (event: PointerEvent) => {
+      if (!panelRef.current?.contains(event.target as Node)) handleOpenChange(false);
+    };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
   }, [open]);
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -91,7 +99,7 @@ export function AdminPanel() {
   const amountValid = Number.isSafeInteger(amount) && amount >= 0 && amount <= 2_147_483_647;
 
   return (
-    <>
+    <div className="relative" ref={panelRef}>
       <Button
         type="button"
         variant="outline"
@@ -99,6 +107,8 @@ export function AdminPanel() {
         onClick={() => setOpen(true)}
         title="Open admin panel"
         aria-label="Open admin panel"
+        aria-expanded={open}
+        aria-controls="demo-admin-panel"
         className="h-8 gap-1.5 border-[#642525] bg-[#0d0909] px-2 text-[#B22222] hover:bg-[#201719] hover:text-[#B22222] sm:px-3"
         data-testid="button-admin-panel"
       >
@@ -106,23 +116,17 @@ export function AdminPanel() {
         <span>Admin</span>
       </Button>
       {open && (
-        <div
-          className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-black/85 p-4"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) handleOpenChange(false);
-          }}
-        >
           <section
+            id="demo-admin-panel"
             role="dialog"
-            aria-modal="true"
             aria-labelledby="demo-admin-title"
-            className="relative my-auto max-h-[90dvh] w-full max-w-md overflow-y-auto border border-[#642525] bg-[#090707] p-5 text-[#B22222] shadow-2xl sm:p-6"
+            className="absolute right-0 top-full z-[80] mt-2 max-h-[calc(100dvh-5rem)] w-[min(90vw,24rem)] overflow-y-auto border border-[#642525] bg-[#090707] p-4 text-[#B22222] shadow-2xl sm:p-5"
           >
             <button type="button" onClick={() => handleOpenChange(false)} aria-label="Close admin panel" className="absolute right-4 top-4 rounded p-1 text-[#8f2929] hover:bg-[#201719] hover:text-[#B22222]" data-testid="button-admin-close">
               <X className="h-4 w-4" />
             </button>
             <header className="mb-5 pr-8">
-              <h2 id="demo-admin-title" className="flex items-center gap-2 font-display text-lg font-bold uppercase text-[#B22222]">
+              <h2 id="demo-admin-title" className="flex items-center gap-2 font-display text-base font-bold uppercase text-[#B22222]">
                 <Shield className="h-5 w-5" /> Demo admin panel
               </h2>
               <p className="mt-1 text-sm text-[#8f2929]">
@@ -195,8 +199,7 @@ export function AdminPanel() {
               </div>
             )}
           </section>
-        </div>
       )}
-    </>
+    </div>
   );
 }
