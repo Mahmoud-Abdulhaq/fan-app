@@ -1,6 +1,6 @@
 import type { CosmeticCrate, CosmeticSlot } from "@/game/cosmetics";
 import type { GameProfile, Kit } from "@workspace/api-client-react";
-import { Check, Coins, PackageOpen, Sparkles, X } from "lucide-react";
+import { Check, Coins, Lock, PackageOpen, Sparkles, X } from "lucide-react";
 import {
   CRATES,
   getCosmeticSkin,
@@ -26,6 +26,13 @@ const slotLabels = {
   kit: "Kit",
 } as const;
 
+const skinCategories: { slot: CosmeticSlot; title: string; crate: CosmeticCrate }[] = [
+  { slot: "sword", title: "Sword skins", crate: "swords" },
+  { slot: "kit", title: "Kit skins", crate: "kits" },
+  { slot: "block", title: "Block skins", crate: "blocks" },
+  { slot: "axe", title: "Axe skins", crate: "axes" },
+];
+
 function SkinMark({ skin }: { skin: CosmeticSkin }) {
   return (
     <span
@@ -42,9 +49,10 @@ function SkinMark({ skin }: { skin: CosmeticSkin }) {
 }
 
 export function CosmeticsShopPanel({ kits, profile, openingCrate, equippingSlot, latestAward, lastOpenedCrate, onOpenCrate, onEquip }: CosmeticsShopPanelProps) {
-  const ownedSkins = profile.ownedSkins
-    .map((id) => ({ id, skin: getCosmeticSkin(id, kits) }))
-    .sort((a, b) => (a.skin?.name ?? a.id).localeCompare(b.skin?.name ?? b.id));
+  const allSkins = skinCategories.flatMap(({ crate }) => getCratePool(crate, kits));
+  const allSkinIds = new Set(allSkins.map((skin) => skin.id));
+  const ownedSkinIds = new Set(profile.ownedSkins);
+  const unknownOwnedSkins = profile.ownedSkins.filter((id) => !allSkinIds.has(id));
   const isBusy = openingCrate !== null || equippingSlot !== null;
 
   const awardedSkin = latestAward
@@ -155,59 +163,83 @@ export function CosmeticsShopPanel({ kits, profile, openingCrate, equippingSlot,
           <section aria-labelledby="collection-title">
             <div className="flex items-end justify-between border-b border-[#4b1d1d] pb-2">
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-[#8f2929]">Owned gear</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-[#8f2929]">Browse by gear type</p>
                 <h3 id="collection-title" className="font-display text-lg font-bold uppercase text-[#B22222]">
-                  Collection
+                  Skin catalog
                 </h3>
               </div>
               <span className="font-mono text-[10px] text-[#8f2929]" data-testid="text-owned-count">
-                {ownedSkins.length} ITEMS
+                {profile.ownedSkins.length} / {allSkins.length} OWNED
               </span>
             </div>
 
-            {ownedSkins.length === 0 ? (
-              <div className="mt-3 border border-dashed border-[#512020] bg-[#0c0909] px-4 py-5 text-center" data-testid="empty-owned-skins">
-                <PackageOpen className="mx-auto h-5 w-5 text-[#762323]" aria-hidden="true" />
-                <p className="mt-2 font-display text-sm font-bold uppercase text-[#B22222]">Locker is empty</p>
-                <p className="mt-1 text-xs text-[#8f2929]">Open a crate to find your first look.</p>
-              </div>
-            ) : (
-              <ul className="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
-                {ownedSkins.map(({ id, skin }) => {
-                  const slot = skin?.slot;
-                  const equipped = slot ? profile.equippedSkins[slot] === id : false;
+            <div className="mt-3 grid gap-3 pr-1 sm:grid-cols-2" data-testid="skin-catalog">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {skinCategories.map(({ slot, title, crate }) => {
+                  const categorySkins = allSkins
+                    .filter((skin) => skin.slot === slot)
+                    .sort((a, b) => a.name.localeCompare(b.name));
+                  const ownedInCategory = categorySkins.filter((skin) => ownedSkinIds.has(skin.id)).length;
                   return (
-                    <li
-                      key={id}
-                      className={`flex items-center gap-3 border p-2.5 ${equipped ? "border-[#6b2525] bg-[#282525]" : "border-[#3e1a1a] bg-[#0b0808]"}`}
-                      data-testid={`item-owned-skin-${id}`}
-                    >
-                      {skin ? <SkinMark skin={skin} /> : <span className="h-11 w-11 shrink-0 border border-[#542020] bg-[#171111]" />}
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-display text-sm font-bold text-[#B22222]" data-testid={`text-skin-name-${id}`}>
-                          {skin?.name ?? id}
-                        </p>
-                        <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#8f2929]">
-                          {slot ? slotLabels[slot] : "Unknown slot"}{equipped ? " · equipped" : ""}
-                        </p>
-                      </div>
-                      {skin && (
-                        <button
-                          type="button"
-                          onClick={() => onEquip(skin.slot, id)}
-                          disabled={isBusy || equipped}
-                          className={`min-h-8 border px-2.5 font-mono text-[9px] font-bold uppercase tracking-wider disabled:cursor-not-allowed disabled:opacity-45 ${equipped ? "border-[#595454] bg-[#303030] text-[#B22222]" : "border-[#702626] bg-[#171010] text-[#B22222] hover:bg-[#241616]"}`}
-                          data-testid={`button-equip-skin-${id}`}
-                          aria-label={equipped ? `${skin.name} is equipped` : `Equip ${skin.name}`}
-                        >
-                          {equipped ? <span className="inline-flex items-center gap-1"><Check className="h-3 w-3" /> Equipped</span> : "Equip"}
-                        </button>
+                    <section key={slot} aria-labelledby={`skin-category-${slot}`} className="flex h-80 max-h-80 flex-col border border-[#421a1a] bg-[#0d0a0a] p-3" data-testid={`skin-category-${slot}`}>
+                      <header className="mb-2 flex shrink-0 items-center justify-between gap-2 border-b border-[#421a1a] pb-2">
+                        <h4 id={`skin-category-${slot}`} className="font-display text-sm font-bold uppercase text-[#B22222]">{title}</h4>
+                        <span className="font-mono text-[9px] uppercase text-[#8f2929]">{ownedInCategory} / {categorySkins.length}</span>
+                      </header>
+                      {categorySkins.length ? (
+                        <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto">
+                          {categorySkins.map((skin) => {
+                            const owned = ownedSkinIds.has(skin.id);
+                            const equipped = profile.equippedSkins[slot] === skin.id;
+                            return (
+                              <li
+                                key={skin.id}
+                                className={`flex items-center gap-2 border p-2 ${equipped ? "border-[#6b2525] bg-[#282525]" : "border-[#3e1a1a] bg-[#0b0808]"}`}
+                                data-testid={owned ? `item-owned-skin-${skin.id}` : `item-skin-catalog-${skin.id}`}
+                              >
+                                <SkinMark skin={skin} />
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate font-display text-xs font-bold text-[#B22222]" data-testid={`text-skin-name-${skin.id}`}>
+                                    {skin.name}
+                                  </p>
+                                  <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[#8f2929]">
+                                    {equipped ? "Equipped" : owned ? "Owned" : `${slotLabels[slot]} crate`}
+                                  </p>
+                                </div>
+                                {owned ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => onEquip(slot, skin.id)}
+                                    disabled={isBusy || equipped}
+                                    className={`min-h-8 shrink-0 border px-2 font-mono text-[9px] font-bold uppercase tracking-wider disabled:cursor-not-allowed disabled:opacity-45 ${equipped ? "border-[#595454] bg-[#303030] text-[#B22222]" : "border-[#702626] bg-[#171010] text-[#B22222] hover:bg-[#241616]"}`}
+                                    data-testid={`button-equip-skin-${skin.id}`}
+                                    aria-label={equipped ? `${skin.name} is equipped` : `Equip ${skin.name}`}
+                                  >
+                                    {equipped ? <span className="inline-flex items-center gap-1"><Check className="h-3 w-3" /> Equipped</span> : "Equip"}
+                                  </button>
+                                ) : (
+                                  <span className="inline-flex shrink-0 items-center gap-1 border border-[#3e1a1a] px-2 py-1 font-mono text-[9px] uppercase text-[#7e2525]" aria-label={`${skin.name} is locked`}>
+                                    <Lock className="h-3 w-3" aria-hidden="true" /> Locked
+                                  </span>
+                                )}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      ) : (
+                        <p className="py-3 text-center text-[10px] text-[#7e2525]">No {title.toLowerCase()} are available yet.</p>
                       )}
-                    </li>
+                      <p className="mt-2 text-[9px] text-[#702222]">Unlock skins from the {CRATES.find((item) => item.id === crate)?.name.toLowerCase()}.</p>
+                    </section>
                   );
                 })}
-              </ul>
-            )}
+              </div>
+              {unknownOwnedSkins.length > 0 && (
+                <p className="mt-3 border border-[#421a1a] bg-[#0b0808] p-2 font-mono text-[9px] text-[#8f2929]">
+                  {unknownOwnedSkins.length} unlisted {unknownOwnedSkins.length === 1 ? "skin is" : "skins are"} still saved to your account.
+                </p>
+              )}
+            </div>
           </section>
 
           <section aria-labelledby="loadout-title">
@@ -219,7 +251,7 @@ export function CosmeticsShopPanel({ kits, profile, openingCrate, equippingSlot,
               <Sparkles className="mb-1 h-4 w-4 text-[#8f2929]" aria-hidden="true" />
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              {(Object.keys(slotLabels) as (keyof typeof slotLabels)[]).map((slot) => {
+              {skinCategories.map(({ slot }) => {
                 const skinId = profile.equippedSkins[slot];
                 const skin = skinId ? getCosmeticSkin(skinId, kits) : undefined;
                 return (
