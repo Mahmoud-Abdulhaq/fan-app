@@ -1,6 +1,6 @@
 import { Axe, Box, Sword, X } from "lucide-react";
 import type { GameState, ShopItemId, Cost } from "@/game/types";
-import { SHOP_ITEMS, buyStatus, effectiveCost } from "@/game/engine";
+import { shopItemsForGame, buyStatus, effectiveCost } from "@/game/engine";
 import { cn } from "@/lib/utils";
 
 const ICON = { Blocks: Box, Swords: Sword, Axes: Axe } as const;
@@ -11,6 +11,7 @@ function costLabel(c: Cost) {
 
 export function MatchShop({ game, closeKey = "B", onBuy, onClose }: { game: GameState; closeKey?: string; onBuy: (id: ShopItemId) => void; onClose: () => void }) {
   const f = game.blue;
+  const items = shopItemsForGame(game);
   const away = !f.alive || buyStatus(game, f, "wool8") === "away";
   return (
     <div className="mg-paper absolute inset-x-2 top-2 z-20 max-h-[calc(100%-1rem)] overflow-auto rounded-lg p-3 sm:inset-x-auto sm:right-2 sm:w-[340px]" data-testid="panel-match-shop">
@@ -20,7 +21,7 @@ export function MatchShop({ game, closeKey = "B", onBuy, onClose }: { game: Game
       </div>
       {away && <p className="mb-2 rounded border border-dashed border-[#B22222]/50 px-2 py-1.5 text-xs font-semibold" data-testid="text-shop-away">Walk back onto your home island to buy.</p>}
       <div className="space-y-1.5">
-        {SHOP_ITEMS.map((item, i) => {
+        {items.map((item, i) => {
           const st = buyStatus(game, f, item.id);
           const Icon = ICON[item.group];
           return (
@@ -37,7 +38,7 @@ export function MatchShop({ game, closeKey = "B", onBuy, onClose }: { game: Game
           );
         })}
       </div>
-      <p className="mt-2 font-mono text-[10px] uppercase tracking-wider">Keys 1-6 buy while open. {closeKey} closes.</p>
+      <p className="mt-2 font-mono text-[10px] uppercase tracking-wider">Keys 1-{items.length} buy while open. {closeKey} closes.</p>
     </div>
   );
 }

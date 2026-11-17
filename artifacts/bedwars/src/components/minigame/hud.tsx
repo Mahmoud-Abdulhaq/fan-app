@@ -43,7 +43,7 @@ export function HudTop({ hud, botKit }: { hud: HudSnapshot; botKit: KitLoadout }
           <span className="font-mono text-xs" data-testid="text-bot-hp">{hud.bot.eliminated ? "OUT" : hud.bot.alive ? `${hud.bot.hp}/${hud.bot.maxHp}` : "respawning"}</span>
           <BedPips {...orangeBed} />
         </div>
-        <p className="truncate font-mono text-[9px] uppercase tracking-wider">{botKit.kitName} / {botKit.ability.name}</p>
+        <p className="truncate font-mono text-[9px] uppercase tracking-wider">{botKit.category === "None" ? "No kit" : `${botKit.kitName} / ${botKit.ability.name}`}</p>
       </div>
     </div>
   );
@@ -69,11 +69,13 @@ export function HudBottom({ hud, kit, keybinds, onAbility, onShop }: {
           className={cn("rounded-md border px-2.5 py-1.5 text-xs font-bold", hud.onHome ? "border-[#B22222] bg-[#252528]" : "border-[#B22222]/30")}>
           Shop <kbd className="font-mono text-[10px]">{formatKey(keybinds.shop)}</kbd>{hud.discount && <span className="ml-1 font-mono text-[10px]">-35%</span>}
         </button>
-        <button type="button" onClick={onAbility} data-testid="button-ability" title={kit.ability.summary}
-          className={cn("relative overflow-hidden rounded-md border px-2.5 py-1.5 text-xs font-bold transition-transform", ready ? "border-[#B22222] bg-[#252528] mg-ready" : "border-[#B22222]/30")}>
-          <span className="absolute inset-y-0 left-0 bg-[#B22222]/12" style={{ width: `${pct * 100}%` }} />
-          <span className="relative flex items-center gap-1"><Sparkles className="h-3.5 w-3.5" />{kit.ability.name} <kbd className="font-mono text-[10px]">{ready ? formatKey(keybinds.ability) : `${hud.abilityCd.toFixed(1)}s`}</kbd></span>
-        </button>
+        {kit.category !== "None" && (
+          <button type="button" onClick={onAbility} data-testid="button-ability" title={kit.ability.summary}
+            className={cn("relative overflow-hidden rounded-md border px-2.5 py-1.5 text-xs font-bold transition-transform", ready ? "border-[#B22222] bg-[#252528] mg-ready" : "border-[#B22222]/30")}>
+            <span className="absolute inset-y-0 left-0 bg-[#B22222]/12" style={{ width: `${pct * 100}%` }} />
+            <span className="relative flex items-center gap-1"><Sparkles className="h-3.5 w-3.5" />{kit.ability.name} <kbd className="font-mono text-[10px]">{ready ? formatKey(keybinds.ability) : `${hud.abilityCd.toFixed(1)}s`}</kbd></span>
+          </button>
+        )}
       </div>
       {hud.buffs.length > 0 && (
         <div className="flex w-full flex-wrap gap-1">

@@ -34,6 +34,7 @@ import type {
   DemoAdminSessionInput,
   EquipSkinInput,
   GameKitInput,
+  GameMatchInput,
   GameProfile,
   GameResultInput,
   GameTicket,
@@ -511,7 +512,7 @@ export const getStartGameMatchUrl = () => {
   return `/api/minigame/match`
 }
 
-export const startGameMatch = async (gameKitInput: GameKitInput, options?: Parameters<typeof customFetch>[1]): Promise<GameTicket> => {
+export const startGameMatch = async (gameMatchInput: GameMatchInput, options?: Parameters<typeof customFetch>[1]): Promise<GameTicket> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -532,7 +533,7 @@ return customFetch<GameTicket>(getStartGameMatchUrl(),
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(gameKitInput)
+    body: JSON.stringify(gameMatchInput)
   }
 );}
 
@@ -570,9 +571,9 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type StartGameMatchMutationResult = NonNullable<Awaited<ReturnType<typeof startGameMatch>>>
-    export type StartGameMatchMutationBody = BodyType<GameKitInput>
+    export type StartGameMatchMutationBody = BodyType<GameMatchInput>
     export type StartGameMatchMutationError = ErrorType<unknown>
-    export type StartGameMatchMutationVariables = {data: BodyType<GameKitInput>}
+    export type StartGameMatchMutationVariables = {data: BodyType<GameMatchInput>}
 
     export const useStartGameMatch = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startGameMatch>>, TError,StartGameMatchMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}

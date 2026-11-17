@@ -112,7 +112,7 @@ router.post("/minigame/admin/action", async (req, res): Promise<void> => {
     } else if (action === "setCoins") {
       await tx.update(gameProfilesTable).set({ coins: amount! }).where(eq(gameProfilesTable.userId, id));
     } else if (action === "resetStats") {
-      await tx.update(gameProfilesTable).set({ games: 0, wins: 0 }).where(eq(gameProfilesTable.userId, id));
+      await tx.update(gameProfilesTable).set({ games: 0, wins: 0, rankedRp: 0 }).where(eq(gameProfilesTable.userId, id));
     } else {
       await tx.update(gameProfilesTable).set({ unlocked: [...new Set([...row.unlocked, ...allKitIds])] }).where(eq(gameProfilesTable.userId, id));
     }
@@ -166,16 +166,18 @@ router.post("/minigame/unlock", async (req, res): Promise<void> => {
 
 router.post("/minigame/match", async (req, res): Promise<void> => {
   const parsed = V.StartGameMatchBody.safeParse(req.body);
-  if (!parsed.success) { res.status(400).json({ error: "Choose a kit." }); return; }
+  if (!parsed.success) { res.status(400).json({ error: "Choose a match mode." }); return; }
+  if (parsed.data.mode === "pit" && !parsed.data.kitId) { res.status(400).json({ error: "Choose a kit for The Pit." }); return; }
+  if (parsed.data.mode === "ranked" && parsed.data.kitId) { res.status(400).json({ error: "Ranked matches do not allow kits." }); return; }
   const id = userId(req);
   const ticket = await db.transaction(async tx => {
     const [row] = await tx.select().from(gameProfilesTable).where(eq(gameProfilesTable.userId, id)).for("update");
-    const [kit] = await tx.select().from(kitsTable).where(eq(kitsTable.id, parsed.data.kitId));
-    if (!kit || (kit.data.tier !== "D" && !row!.unlocked.includes(kit.id))) return null;
+    const [kit] = parsed.data.kitId ? await tx.select().from(kitsTable).where(eq(kitsTable.id, parsed.data.kitId)) : [];
+    if (parsed.data.mode === "pit" && (!kit || (kit.data.tier !== "D" && !row!.unlocked.includes(kit.id)))) return null;
     // One active match per account; opening another tab abandons the previous ticket.
     await tx.delete(gameMatchesTable).where(and(eq(gameMatchesTable.userId, id), eq(gameMatchesTable.finished, false)));
     const matchId = randomUUID();
-    await tx.insert(gameMatchesTable).values({ id: matchId, userId: id });
+    await tx.insert(gameMatchesTable).values({ id: matchId, userId: id, mode: parsed.data.mode });
     return { matchId };
   });
   if (!ticket) { res.status(403).json({ error: "Unlock this kit before playing." }); return; }
@@ -191,13 +193,16 @@ router.post("/minigame/finish", async (req, res): Promise<void> => {
     const [match] = await tx.select().from(gameMatchesTable).where(and(eq(gameMatchesTable.id, parsed.data.matchId), eq(gameMatchesTable.userId, id))).for("update");
     if (!match) return "This match is no longer active. Another tab may have started a new match.";
     if (match.finished) return null; // Retries cannot grant a second reward.
-    if (Date.now() - match.startedAt.getTime() < 20_000) return "Play for at least 20 seconds to earn a match reward.";
+    const elapsedMs = Date.now() - match.startedAt.getTime();
+    if (match.mode === "pit" && elapsedMs < 20_000) return "Play for at least 20 seconds to earn a match reward.";
+    const coinReward = elapsedMs < 20_000 ? 0 : parsed.data.won ? 15 : 5;
     const [row] = await tx.select().from(gameProfilesTable).where(eq(gameProfilesTable.userId, id));
     await tx.update(gameMatchesTable).set({ finished: true }).where(eq(gameMatchesTable.id, match.id));
     await tx.update(gameProfilesTable).set({
-      coins: row!.coins + (parsed.data.won ? 15 : 5),
+      coins: row!.coins + coinReward,
       games: row!.games + 1,
       wins: row!.wins + (parsed.data.won ? 1 : 0),
+      rankedRp: match.mode === "ranked" ? row!.rankedRp + (parsed.data.won ? 25 : -10) : row!.rankedRp,
     }).where(eq(gameProfilesTable.userId, id));
     return null;
   });

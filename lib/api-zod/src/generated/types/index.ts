@@ -17,6 +17,8 @@ export * from './demoAdminSessionInput';
 export * from './equipSkinInput';
 export * from './equipSkinInputSlot';
 export * from './gameKitInput';
+export * from './gameMatchInput';
+export * from './gameMatchInputMode';
 export * from './gameProfile';
 export * from './gameProfileEquippedSkins';
 export * from './gameResultInput';

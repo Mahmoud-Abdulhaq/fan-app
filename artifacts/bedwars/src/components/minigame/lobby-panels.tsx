@@ -3,6 +3,7 @@ import { Check, Coins, Lock, Play, RotateCcw, Sparkles, Swords } from "lucide-re
 import type { Kit } from "@workspace/api-client-react";
 import { isOwned, unlockPrice, type KitLoadout } from "@/game/abilities";
 import { ARENA_MAPS, type ArenaMapId } from "@/game/maps";
+import { rankForRp } from "@/game/ranked";
 import { cn } from "@/lib/utils";
 
 const TIERS = ["D", "C", "B", "A", "S"] as const;
@@ -98,6 +99,39 @@ export function PlayPanel({ loadout, kit, mapId, onMapChange, onPlay, starting, 
           <p className="mt-2 text-center font-mono text-[10px] uppercase tracking-wider">Win 15 coins / Loss 5 coins / 20s minimum</p>
         </div>
         <HowToPlay />
+      </div>
+    </div>
+  );
+}
+export function RankedPanel({ rankedRp, onPlay, starting, startError }: {
+  rankedRp: number; onPlay: () => void; starting: boolean; startError: boolean;
+}) {
+  const rank = rankForRp(rankedRp);
+  return (
+    <div className="grid gap-5 lg:grid-cols-[1fr_1fr]" data-testid="panel-ranked">
+      <div className="mg-paper rounded-lg p-5">
+        <p className="font-mono text-[10px] uppercase tracking-[0.25em]">Ranked 1v1 / blue vs orange bot</p>
+        <h2 className="mt-1 font-display text-3xl font-bold uppercase">{rank.name}</h2>
+        <p className="mt-1 font-mono text-sm">{rankedRp} RP{rank.nextName ? ` / ${rank.nextName} at ${rank.nextRp}` : " / top rank"}</p>
+        <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#2c2c2f]" role="progressbar" aria-label="Progress to next rank" aria-valuenow={rank.progress} aria-valuemin={0} aria-valuemax={rank.progressToNext}>
+          <div className="h-full bg-[#B22222] transition-[width]" style={{ width: `${Math.min(100, rank.progress / rank.progressToNext * 100)}%` }} />
+        </div>
+        <p className="mt-4 text-sm font-semibold">Win: +25 RP. Loss: −10 RP. Every rank needs 100 RP.</p>
+        <p className="mt-2 text-xs">Everyone starts Unranked. Ranks: Bronze, Silver, Gold, Diamond, Emerald, then Nightmare at 600 RP.</p>
+      </div>
+      <div className="mg-paper rounded-lg p-5">
+        <p className="font-mono text-[10px] uppercase tracking-[0.25em]">Ranked rules</p>
+        <ul className="mt-3 space-y-2 text-sm">
+          <li>Two home islands and one middle island, with no bridge at the start.</li>
+          <li>No kits or kit abilities.</li>
+          <li>Start with no blocks or axe; buy blocks and axes with iron.</li>
+          <li>Build across the void to reach the other team’s bed.</li>
+        </ul>
+        <button type="button" onClick={onPlay} disabled={starting} data-testid="button-play-ranked"
+          className="mg-cta mt-5 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-[#B22222] px-4 py-3.5 font-display text-xl font-bold uppercase tracking-widest disabled:opacity-60">
+          {starting ? <><RotateCcw className="h-5 w-5 animate-spin" />Opening ranked match</> : <><Play className="h-5 w-5" />Play ranked</>}
+        </button>
+        {startError && <p className="mt-2 text-center text-xs font-semibold" data-testid="text-ranked-start-error">Could not open a ranked match. Check your connection and try again.</p>}
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import {
-  VOID, type GameState, type Fighter, type Team, type Input, type ShopItemId, type Cost, type Bed, type LogEntry, type EquippedSkins,
+  VOID, type GameMode, type GameState, type Fighter, type Team, type Input, type ShopItemId, type Cost, type Bed, type LogEntry, type EquippedSkins,
 } from "./types";
 import type { ArenaMapId } from "./maps";
 import {
@@ -20,6 +20,9 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: "axe1", label: "Stone Axe", group: "Axes", cost: { iron: 8 }, tier: 1, desc: "2 damage to blocks and beds." },
   { id: "axe2", label: "Iron Axe", group: "Axes", cost: { iron: 16 }, tier: 2, desc: "3 damage to blocks and beds." },
 ];
+export function shopItemsForGame(s: Pick<GameState, "mode">) {
+  return s.mode === "ranked" ? SHOP_ITEMS.filter((item) => item.group === "Blocks" || item.group === "Axes") : SHOP_ITEMS;
+}
 
 export function effectiveCost(s: GameState, f: Fighter, item: ShopItem): Cost {
   const c = { ...item.cost };
@@ -29,17 +32,19 @@ export function effectiveCost(s: GameState, f: Fighter, item: ShopItem): Cost {
 export function canAfford(f: Fighter, c: Cost) {
   return f.iron >= (c.iron ?? 0);
 }
-export type BuyStatus = "ok" | "owned" | "poor" | "away";
+export type BuyStatus = "ok" | "owned" | "poor" | "away" | "unavailable";
 export function buyStatus(s: GameState, f: Fighter, id: ShopItemId): BuyStatus {
-  const item = SHOP_ITEMS.find((i) => i.id === id)!;
+  const item = shopItemsForGame(s).find((i) => i.id === id);
+  if (!item) return "unavailable";
   if (item.group === "Swords" && f.sword >= item.tier!) return "owned";
   if (item.group === "Axes" && f.axe >= item.tier!) return "owned";
   if (!f.alive || !onHomeIsland(f)) return "away";
   return canAfford(f, effectiveCost(s, f, item)) ? "ok" : "poor";
 }
 export function buyItem(s: GameState, f: Fighter, id: ShopItemId): { ok: boolean; message: string } {
-  const item = SHOP_ITEMS.find((i) => i.id === id)!;
   const st = buyStatus(s, f, id);
+  if (st === "unavailable") return { ok: false, message: "That item is not available in this mode" };
+  const item = shopItemsForGame(s).find((i) => i.id === id)!;
   if (st === "owned") return { ok: false, message: `Already have ${item.label}` };
   if (st === "away") return { ok: false, message: "Shop only works on your home island" };
   if (st === "poor") return { ok: false, message: "Not enough resources" };
@@ -53,26 +58,27 @@ export function buyItem(s: GameState, f: Fighter, id: ShopItemId): { ok: boolean
 
 const EMPTY_SKINS: EquippedSkins = { sword: null, axe: null, block: null, kit: null };
 
-function makeFighter(team: Team, kit: KitLoadout, spawn: { x: number; y: number }, cosmetics = EMPTY_SKINS): Fighter {
+function makeFighter(team: Team, kit: KitLoadout, spawn: { x: number; y: number }, mode: GameMode, cosmetics = EMPTY_SKINS): Fighter {
   return {
     team, kit, x: spawn.x, y: spawn.y, spawn, facing: { x: team === "blue" ? 1 : -1, y: 0 },
     hp: MAX_HP, maxHp: MAX_HP, alive: true, eliminated: false, respawnAt: null,
-    sword: 0, axe: 0, blocks: 8, iron: kit.category === "Economy" ? 4 : 0, cosmetics, swingWeapon: "sword",
-    attackCd: 0, mineCd: 0, abilityCd: 3, placeCd: 0, buffs: {}, lastHurt: -99, regenT: 0, swingT: -9, hurtT: -9,
+    sword: 0, axe: mode === "ranked" ? -1 : 0, blocks: mode === "ranked" ? 0 : 8, iron: kit.category === "Economy" ? 4 : 0, cosmetics, swingWeapon: "sword",
+    attackCd: 0, mineCd: 0, abilityCd: kit.category === "None" ? 0 : 3, placeCd: 0, buffs: {}, lastHurt: -99, regenT: 0, swingT: -9, hurtT: -9,
     speedMul: 1, attackMul: 1, kills: 0, deaths: 0, bedsBroken: 0, blocksPlaced: 0, deathCause: "",
   };
 }
 
-export interface GameOptions { blueKit: KitLoadout; orangeKit: KitLoadout; mapId?: ArenaMapId; cosmetics?: EquippedSkins; seed?: number }
+export interface GameOptions { blueKit: KitLoadout; orangeKit: KitLoadout; mapId?: ArenaMapId; mode?: GameMode; cosmetics?: EquippedSkins; seed?: number }
 
 export function createGame(o: GameOptions): GameState {
-  const mapId = o.mapId ?? "classic";
-  const { base, wall, wallSkin } = buildMap(mapId);
+  const mode = o.mode ?? "pit";
+  const mapId = mode === "ranked" ? "classic" : o.mapId ?? "classic";
+  const { base, wall, wallSkin } = buildMap(mapId, mode !== "ranked");
   const mkBed = (team: Team, x: number, y: number, cat: string): Bed => ({ team, x, y, hp: bedHpFor(cat), maxHp: bedHpFor(cat), alive: true, hitT: -9 });
   const s: GameState = {
-    t: 0, base, wall, wallSkin, mapId,
-    blue: makeFighter("blue", o.blueKit, { x: 4.5, y: 7.5 }, o.cosmetics),
-    orange: makeFighter("orange", o.orangeKit, { x: 35.5, y: 7.5 }),
+    t: 0, mode, base, wall, wallSkin, mapId,
+    blue: makeFighter("blue", o.blueKit, { x: 4.5, y: 7.5 }, mode, o.cosmetics),
+    orange: makeFighter("orange", o.orangeKit, { x: 35.5, y: 7.5 }, mode),
     beds: [mkBed("blue", 2, 7, o.blueKit.category), mkBed("orange", 37, 7, o.orangeKit.category)],
     gens: [
       { kind: "iron", x: 2, y: 9, interval: 0.05, timer: 0, stock: 0, cap: 40, owner: "blue" },
@@ -147,10 +153,15 @@ export function stepFighter(s: GameState, f: Fighter, inp: Input, dt: number) {
 
   if (inp.attack && f.attackCd <= 0) swing(s, f, foe);
   if (inp.mine && f.mineCd <= 0) {
-    f.swingWeapon = "axe";
-    f.mineCd = MINE_CD; f.swingT = s.t;
-    const r = mineCell(s, f, resolveTarget(f, inp.aim));
-    if (r === "own-bed") say(s, f, "That is your own bed");
+    f.mineCd = MINE_CD;
+    if (f.axe < 0) {
+      if (f.team === "blue") say(s, f, "Buy an axe before mining");
+    } else {
+      f.swingWeapon = "axe";
+      f.swingT = s.t;
+      const r = mineCell(s, f, resolveTarget(f, inp.aim));
+      if (r === "own-bed") say(s, f, "That is your own bed");
+    }
   }
   for (const a of inp.actions) {
     if (!f.alive) break;
@@ -158,9 +169,10 @@ export function stepFighter(s: GameState, f: Fighter, inp: Input, dt: number) {
       if (f.placeCd > 0) continue;
       f.placeCd = 0.08;
       const r = placeBlock(s, f, resolveTarget(f, inp.aim));
-      if (r === "no-blocks") say(s, f, "Out of blocks: buy wool (B)");
+      if (r === "no-blocks") say(s, f, "Out of blocks: open the shop");
       else if (r === "invalid") say(s, f, "Can't place there");
     } else if (a.type === "ability") {
+      if (f.kit.category === "None") continue;
       if (f.abilityCd > 0) { say(s, f, `${f.kit.ability.name} in ${f.abilityCd.toFixed(1)}s`); continue; }
       const r = triggerAbility(s, f, foe);
       if (r.ok) { f.abilityCd = f.kit.ability.cooldown; addFloat(s, f.x, f.y - 1.1, r.message, TEAM_COLOR[f.team]); }
@@ -249,7 +261,7 @@ export function hudSnapshot(s: GameState): HudSnapshot {
     t: s.t, hp: Math.max(0, f.hp), maxHp: f.maxHp, alive: f.alive, eliminated: f.eliminated,
     respawnIn: f.respawnAt !== null ? Math.max(0, f.respawnAt - s.t) : null,
     iron: f.iron, blocks: f.blocks,
-    sword: TIER_NAMES[f.sword], axe: TIER_NAMES[f.axe], swordTier: f.sword, axeTier: f.axe,
+    sword: TIER_NAMES[f.sword], axe: f.axe < 0 ? "None" : TIER_NAMES[f.axe], swordTier: f.sword, axeTier: f.axe,
     abilityCd: f.abilityCd, abilityMax: f.kit.ability.cooldown, onHome: onHomeIsland(f), discount: hasBuff(s, f, "discount"),
     buffs: Object.keys(f.buffs).filter((k) => hasBuff(s, f, k)),
     beds: s.beds.map((x) => ({ team: x.team, hp: Math.max(0, x.hp), maxHp: x.maxHp, alive: x.alive })),

@@ -1,13 +1,15 @@
 import assert from "node:assert/strict";
-import { createGame, step, emptyInput, buyItem, checkWinner, STEP, SHOP_ITEMS } from "./engine";
-import { bedOf, destroyBed, killFighter, placeBlock, rewardFor, idx } from "./core";
-import { PASSIVES, ABILITIES, triggerAbility, type KitLoadout, type KitCategory } from "./abilities";
-import { botThink } from "./bot";
+import { createGame, step, emptyInput, buyItem, buyStatus, checkWinner, STEP, SHOP_ITEMS, shopItemsForGame } from "./engine";
+import { bedOf, destroyBed, ISLANDS, killFighter, mineCell, placeBlock, rewardFor, idx } from "./core";
+import { PASSIVES, ABILITIES, NO_KIT_LOADOUT, triggerAbility, type KitLoadout, type KitCategory } from "./abilities";
+import { botThink, choosePurchase } from "./bot";
 import { ARENA_MAPS } from "./maps";
 import { STATIC_SKINS } from "./cosmetics";
 import { DEFAULT_KEYBINDS, parseSettings } from "./settings";
+import { rankForRp } from "./ranked";
 
-const loadout = (category: KitCategory = "Fighter", index = 0): KitLoadout => ({
+type ActiveKitCategory = Exclude<KitCategory, "None">;
+const loadout = (category: ActiveKitCategory = "Fighter", index = 0): KitLoadout => ({
   kitId: `${category}-${index}`, kitName: category, tier: "D", category,
   passive: PASSIVES[category], ability: ABILITIES[category][index],
 });
@@ -46,6 +48,44 @@ const tick = (s: ReturnType<typeof game>, seconds: number, bot = false) => {
   }
 }
 {
+  const ranked = createGame({ mode: "ranked", blueKit: NO_KIT_LOADOUT, orangeKit: NO_KIT_LOADOUT });
+  assert.equal(ranked.mode, "ranked");
+  assert.equal(ranked.blue.blocks, 0, "ranked starts without blocks");
+  assert.equal(ranked.blue.axe, -1, "ranked starts without an axe");
+  assert.equal(ranked.blue.kit.category, "None", "ranked starts without a kit");
+  assert.equal(ISLANDS.filter((island) => island.home !== null).length, 2, "ranked has two team islands");
+  assert.equal(ISLANDS.filter((island) => island.home === null).length, 1, "ranked has one middle island");
+  const orangeBedHp = ranked.beds.find((bed) => bed.team === "orange")!.hp;
+  assert.equal(mineCell(ranked, ranked.blue, { x: 37, y: 7 }), "nothing", "ranked players cannot mine before buying an axe");
+  assert.equal(ranked.beds.find((bed) => bed.team === "orange")!.hp, orangeBedHp);
+  assert.equal(ranked.base[idx(7, 7)], 0, "ranked has no prebuilt bridge from blue home");
+  assert.equal(ranked.base[idx(19, 7)] !== 0, true, "ranked keeps its middle island");
+  assert.equal(ranked.base[idx(32, 7)], 0, "ranked has no prebuilt bridge to orange home");
+  assert.deepEqual([...new Set(shopItemsForGame(ranked).map((item) => item.group))].sort(), ["Axes", "Blocks"]);
+  assert.equal(shopItemsForGame(ranked).length, 4, "ranked sells only two block and two axe items");
+  ranked.orange.iron = 100;
+  assert.equal(choosePurchase(ranked), "wool8", "ranked bot prioritizes blocks and cannot buy a sword");
+  ranked.orange.blocks = 16;
+  assert.equal(choosePurchase(ranked), "axe1", "ranked bot buys an axe after gathering blocks");
+  ranked.blue.iron = 100;
+  assert.equal(buyItem(ranked, ranked.blue, "axe1").ok, true, "ranked can buy an axe");
+  assert.equal(ranked.blue.axe, 1);
+  assert.equal(buyStatus(ranked, ranked.blue, "sword1"), "unavailable", "ranked disallows sword purchases");
+  assert.equal(buyItem(ranked, ranked.blue, "sword1").ok, false, "ranked cannot buy swords through the engine");
+  step(ranked, { blue: { ...emptyInput(), actions: [{ type: "ability" }] }, orange: emptyInput() }, STEP);
+  assert.deepEqual(ranked.blue.buffs, {}, "ranked disables kit abilities");
+  assert.equal(rankForRp(0).name, "Unranked");
+  assert.equal(rankForRp(100).name, "Bronze");
+  assert.equal(rankForRp(200).name, "Silver");
+  assert.equal(rankForRp(300).name, "Gold");
+  assert.equal(rankForRp(400).name, "Diamond");
+  assert.equal(rankForRp(500).name, "Emerald");
+  assert.equal(rankForRp(599).name, "Emerald");
+  assert.equal(rankForRp(600).name, "Nightmare");
+  assert.equal(rankForRp(-10).name, "Unranked", "negative points remain in unranked");
+  assert.equal(rankForRp(-10).progress, 0, "negative points do not fill the unranked progress bar");
+}
+{
   for (const map of ARENA_MAPS) {
     const s = createGame({ blueKit: loadout(), orangeKit: loadout(), mapId: map.id });
     assert.equal(s.mapId, map.id, `${map.name} is selected for the match`);
@@ -71,7 +111,7 @@ const tick = (s: ReturnType<typeof game>, seconds: number, bot = false) => {
   assert.equal(s.over?.winner, "orange", "death without bed ends match");
 }
 {
-  for (const category of Object.keys(ABILITIES) as KitCategory[]) {
+  for (const category of Object.keys(ABILITIES) as ActiveKitCategory[]) {
     ABILITIES[category].forEach((_ability, index) => {
       const s = createGame({ blueKit: loadout(category, index), orangeKit: loadout() });
       s.blue.hp = 8;
@@ -92,4 +132,4 @@ const tick = (s: ReturnType<typeof game>, seconds: number, bot = false) => {
 assert.equal(rewardFor(true, 19), 0);
 assert.equal(rewardFor(true, 20), 15);
 assert.equal(rewardFor(false, 20), 5);
-console.log("Minigame engine checks passed: iron-only economy, 50ms generators, five maps, purchases, bridges, respawn, final elimination, abilities, bot progression and rewards.");
+console.log("Minigame engine checks passed: ranked progression and restrictions, iron economy, maps, purchases, bridges, respawn, abilities, bot progression and rewards.");

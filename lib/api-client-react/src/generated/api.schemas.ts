@@ -19,6 +19,7 @@ export interface GameProfile {
   coins: number;
   games: number;
   wins: number;
+  rankedRp: number;
   unlocked: string[];
   ownedSkins: string[];
   equippedSkins: GameProfileEquippedSkins;
@@ -105,6 +106,20 @@ export interface EquipSkinInput {
 export interface GameKitInput {
   /** @minLength 1 */
   kitId: string;
+}
+
+export type GameMatchInputMode = typeof GameMatchInputMode[keyof typeof GameMatchInputMode];
+
+
+export const GameMatchInputMode = {
+  pit: 'pit',
+  ranked: 'ranked',
+} as const;
+
+export interface GameMatchInput {
+  mode: GameMatchInputMode;
+  /** @minLength 1 */
+  kitId?: string;
 }
 
 export interface GameTicket {

@@ -10,19 +10,21 @@ import {
 import { useKits, usePageMeta } from "@/lib/bw";
 import { useToast } from "@/hooks/use-toast";
 import { ErrorState } from "@/components/bw";
-import { buildLoadouts, isOwned, unlockPrice, type KitLoadout } from "@/game/abilities";
+import { buildLoadouts, isOwned, NO_KIT_LOADOUT, unlockPrice, type KitLoadout } from "@/game/abilities";
 import { useMinigameSettings } from "@/game/settings";
+import type { GameMode } from "@/game/types";
+import { rankForRp } from "@/game/ranked";
 import type { ArenaMapId } from "@/game/maps";
 import type { CosmeticCrate, CosmeticSlot } from "@/game/cosmetics";
 import { MIN_REWARD_SECONDS } from "@/game/core";
 import { GameView, type MatchOutcome } from "@/components/minigame/game-view";
-import { KitPicker, KitShopPanel, PlayPanel } from "@/components/minigame/lobby-panels";
+import { KitPicker, KitShopPanel, PlayPanel, RankedPanel } from "@/components/minigame/lobby-panels";
 import { CosmeticsShopPanel } from "@/components/minigame/cosmetics-shop";
 import { ResultScreen, type SettleState } from "@/components/minigame/result-screen";
 import { cn } from "@/lib/utils";
 
 export default function MinigamePage() {
-  usePageMeta("Arena", "Practice 1v1 BedWars against a bot and unlock kits with coins.");
+  usePageMeta("Arena", "Play casual or ranked 1v1 BedWars against a bot, earn rank points, and unlock kits and skins.");
   const { isLoaded, isSignedIn, user } = useUser();
   if (!isLoaded) {
     return (
@@ -42,7 +44,7 @@ function SignedOut() {
       <div className="mg-paper mg-ticket rise rounded-xl p-8 text-center" data-testid="card-arena-signed-out">
         <Lock className="mx-auto h-8 w-8" />
         <h1 className="mt-3 font-display text-3xl font-bold uppercase tracking-wider">The Arena is members only</h1>
-        <p className="mt-2 text-sm">Coins, wins and kit unlocks are saved to your account, so you need to sign in before the gate opens.</p>
+        <p className="mt-2 text-sm">Coins, wins, ranked points and kit unlocks are saved to your account, so you need to sign in before the gate opens.</p>
         <Link href="/sign-in" className="mg-cta mt-6 inline-flex items-center gap-2 rounded-lg border-2 border-[#B22222] bg-[#202023] px-6 py-3 font-display text-lg font-bold uppercase tracking-widest" data-testid="link-arena-sign-in">
           <Swords className="h-5 w-5" />Sign in to play
         </Link>
@@ -52,8 +54,8 @@ function SignedOut() {
 }
 
 type Phase = "lobby" | "playing" | "result";
-type Tab = "play" | "shop";
-interface MatchInfo { id: string; kit: KitLoadout; bot: KitLoadout; mapId: ArenaMapId; n: number }
+type Tab = "pit" | "ranked" | "shop";
+interface MatchInfo { id: string; mode: GameMode; kit: KitLoadout; bot: KitLoadout; mapId: ArenaMapId; n: number }
 
 function errMessage(e: unknown) {
   if (e && typeof e === "object" && "message" in e && typeof (e as { message: unknown }).message === "string") return (e as { message: string }).message;
@@ -65,7 +67,7 @@ function Arena({ userId }: { userId: string }) {
   const { toast } = useToast();
   const { settings, update } = useMinigameSettings(userId);
   const [phase, setPhase] = useState<Phase>("lobby");
-  const [tab, setTab] = useState<Tab>("play");
+  const [tab, setTab] = useState<Tab>("pit");
   const kitsQ = useKits();
   const loadouts = useMemo(() => buildLoadouts(kitsQ.kits), [kitsQ.kits]);
   const profileQ = useGetGameProfile({ query: { queryKey: getGetGameProfileQueryKey(), refetchInterval: phase === "lobby" ? 20_000 : false } });
@@ -129,14 +131,14 @@ function Arena({ userId }: { userId: string }) {
     return k ? loadouts.get(k.id) ?? null : null;
   };
 
-  const play = () => {
-    if (!selected || start.isPending) return;
-    const kit = selected;
-    start.mutate({ data: { kitId: kit.kitId } }, {
+  const startMatch = (mode: GameMode) => {
+    if ((mode === "pit" && !selected) || start.isPending) return;
+    const kit = mode === "ranked" ? NO_KIT_LOADOUT : selected!;
+    start.mutate({ data: { mode, ...(mode === "pit" ? { kitId: kit.kitId } : {}) } }, {
       onSuccess: (ticket) => {
-        const bot = pickBot(kit.kitId) ?? kit;
+        const bot = mode === "ranked" ? NO_KIT_LOADOUT : pickBot(kit.kitId) ?? kit;
         matchCount.current += 1;
-        setMatch({ id: ticket.matchId, kit, bot, mapId: settings.mapId, n: matchCount.current });
+        setMatch({ id: ticket.matchId, mode, kit, bot, mapId: mode === "ranked" ? "classic" : settings.mapId, n: matchCount.current });
         setOutcome(null);
         setSettle({ status: "short" });
         setPhase("playing");
@@ -148,11 +150,17 @@ function Arena({ userId }: { userId: string }) {
 
   const submit = (m: MatchInfo, o: MatchOutcome) => {
     setSettle({ status: "saving" });
-    const before = qc.getQueryData<GameProfile>(getGetGameProfileQueryKey())?.coins;
+    const before = qc.getQueryData<GameProfile>(getGetGameProfileQueryKey());
     finish.mutate({ data: { matchId: m.id, won: o.won } }, {
       onSuccess: (p) => {
         setProfile(p);
-        setSettle({ status: "saved", gained: before !== undefined ? Math.max(0, p.coins - before) : o.won ? 15 : 5, coins: p.coins });
+        setSettle({
+          status: "saved",
+          gained: before ? Math.max(0, p.coins - before.coins) : o.won ? 15 : 5,
+          coins: p.coins,
+          rpDelta: m.mode === "ranked" ? p.rankedRp - (before?.rankedRp ?? p.rankedRp) : undefined,
+          rankedRp: p.rankedRp,
+        });
       },
       onError: (e) => setSettle({ status: "error", message: errMessage(e) }),
     });
@@ -161,7 +169,7 @@ function Arena({ userId }: { userId: string }) {
   const onFinish = (o: MatchOutcome) => {
     setOutcome(o);
     setPhase("result");
-    if (match && o.elapsed >= MIN_REWARD_SECONDS) submit(match, o);
+    if (match && (match.mode === "ranked" || o.elapsed >= MIN_REWARD_SECONDS)) submit(match, o);
     else setSettle({ status: "short" });
   };
 
@@ -183,12 +191,12 @@ function Arena({ userId }: { userId: string }) {
       <div>
         <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.25em]">Match {match.n} / {match.mapId}</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.25em]">{match.mode === "ranked" ? "Ranked match" : `Match ${match.n} / ${match.mapId}`}</p>
             <h1 className="font-display text-2xl font-bold uppercase tracking-wider">Blue vs Orange</h1>
           </div>
           <p className="font-mono text-[10px] uppercase tracking-wider">Ticket {match.id.slice(0, 8)}</p>
         </div>
-        <GameView key={match.id} playerKit={match.kit} botKit={match.bot} mapId={match.mapId}
+        <GameView key={match.id} playerKit={match.kit} botKit={match.bot} mapId={match.mapId} mode={match.mode}
           equippedSkins={profile?.equippedSkins ?? { sword: null, axe: null, block: null, kit: null }}
           settings={settings} onFinish={onFinish} />
       </div>
@@ -198,7 +206,7 @@ function Arena({ userId }: { userId: string }) {
   if (phase === "result" && match && outcome) {
     const leave = () => { setPhase("lobby"); setMatch(null); setOutcome(null); profileQ.refetch(); };
     return (
-      <ResultScreen outcome={outcome} kit={match.kit} settle={settle}
+      <ResultScreen outcome={outcome} kit={match.kit} mode={match.mode} settle={settle}
         onRetry={() => submit(match, outcome)}
         onDiscard={() => setSettle({ status: "discarded" })}
         onRematch={leave} rematchPending={false}
@@ -208,16 +216,18 @@ function Arena({ userId }: { userId: string }) {
 
   const winRate = profile && profile.games > 0 ? ((profile.wins / profile.games) * 100).toFixed(1) : "0.0";
   const TABS: { id: Tab; label: string; icon: typeof Swords }[] = [
-    { id: "play", label: "Play", icon: Swords }, { id: "shop", label: "Shop", icon: ShoppingBag },
+    { id: "pit", label: "The Pit", icon: Swords }, { id: "ranked", label: "Ranked", icon: Trophy }, { id: "shop", label: "Shop", icon: ShoppingBag },
   ];
+  const rankedRp = profile?.rankedRp ?? 0;
+  const rankedInfo = rankForRp(rankedRp);
 
   return (
     <div>
       <header className="rise mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="font-mono text-xs uppercase tracking-[0.3em]">1v1 practice / blue vs orange</p>
-          <h1 className="mt-1 font-display text-4xl font-bold uppercase leading-none tracking-wide sm:text-5xl">The Pit</h1>
-          <p className="mt-2 max-w-xl text-sm">A short top-down BedWars match against a bot. Collect fast-spawning iron, defend your bed, and unlock kits and skins.</p>
+          <p className="font-mono text-xs uppercase tracking-[0.3em]">BedWars practice / blue vs orange</p>
+          <h1 className="mt-1 font-display text-4xl font-bold uppercase leading-none tracking-wide sm:text-5xl">Arena</h1>
+          <p className="mt-2 max-w-xl text-sm">Play a casual match in The Pit or build your rank in a kit-free ranked match.</p>
         </div>
         {profileQ.isError ? (
           <ErrorState onRetry={() => profileQ.refetch()} what="your arena profile" />
@@ -234,6 +244,11 @@ function Arena({ userId }: { userId: string }) {
                 <p className="font-mono text-[9px] uppercase tracking-widest">{s.label}</p>
               </div>
             ))}
+            <div className="px-4 py-2.5 text-center" data-testid="card-ranked-rank">
+              <p className="font-mono text-[9px] uppercase tracking-widest">Rank</p>
+              <p className="font-display text-xl font-bold uppercase">{rankedInfo.name}</p>
+              <p className="font-mono text-[9px] uppercase tracking-widest">{rankedRp} RP</p>
+            </div>
             <div className="hidden px-4 py-2.5 text-center sm:block">
               <p className="mt-4 font-display text-2xl font-bold tabular-nums">{winRate}%</p>
               <p className="font-mono text-[9px] uppercase tracking-widest">Win rate</p>
@@ -252,17 +267,22 @@ function Arena({ userId }: { userId: string }) {
         ))}
       </nav>
 
-      {kitsQ.isError ? <ErrorState onRetry={() => kitsQ.refetch()} what="the kit list" /> : kitsQ.isLoading ? (
-        <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr]"><div className="h-80 animate-pulse rounded-lg bg-[#171719]/30" /><div className="h-80 animate-pulse rounded-lg bg-[#171719]/30" /></div>
-      ) : (
-        <div key={tab} className="rise">
-          {tab === "play" && (
+      <div key={tab} className="rise">
+        {tab === "ranked" && <RankedPanel rankedRp={rankedRp} onPlay={() => startMatch("ranked")} starting={start.isPending} startError={start.isError} />}
+        {tab === "pit" && (
+          kitsQ.isError ? <ErrorState onRetry={() => kitsQ.refetch()} what="the kit list" /> : kitsQ.isLoading ? (
+            <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr]"><div className="h-80 animate-pulse rounded-lg bg-[#171719]/30" /><div className="h-80 animate-pulse rounded-lg bg-[#171719]/30" /></div>
+          ) : (
             <PlayPanel loadout={selected} kit={selectedKit} mapId={settings.mapId} onMapChange={(mapId) => update({ mapId })}
-              onPlay={play} starting={start.isPending} startError={start.isError}>
+              onPlay={() => startMatch("pit")} starting={start.isPending} startError={start.isError}>
               <KitPicker kits={kitsQ.kits} loadouts={loadouts} unlocked={unlocked} selected={selectedId} onSelect={(id) => update({ kitId: id })} onShop={() => setTab("shop")} />
             </PlayPanel>
-          )}
-          {tab === "shop" && (
+          )
+        )}
+        {tab === "shop" && (
+          kitsQ.isError ? <ErrorState onRetry={() => kitsQ.refetch()} what="the kit list" /> : kitsQ.isLoading ? (
+            <div className="grid gap-4 lg:grid-cols-2"><div className="h-80 animate-pulse rounded-lg bg-[#171719]/30" /><div className="h-80 animate-pulse rounded-lg bg-[#171719]/30" /></div>
+          ) : (
             <div className="space-y-6">
               {profileQ.isError ? <ErrorState onRetry={() => profileQ.refetch()} what="your shop inventory" />
                 : profile ? <CosmeticsShopPanel kits={kitsQ.kits} profile={profile} openingCrate={openingCrate}
@@ -271,9 +291,9 @@ function Arena({ userId }: { userId: string }) {
                 : <div className="mg-paper h-72 animate-pulse rounded-lg" />}
               <KitShopPanel kits={kitsQ.kits} loadouts={loadouts} unlocked={unlocked} coins={profile?.coins ?? 0} pendingId={pendingUnlock} onUnlock={doUnlock} />
             </div>
-          )}
-        </div>
-      )}
+          )
+        )}
+      </div>
 
       <p className="mt-8 border-t border-[#B22222]/25 pt-4 text-xs">
         Minigame kits are simplified interpretations: each kit gets its category passive plus one arena ability. They are not exact Roblox BedWars mechanics. Unlock prices: D free, C {unlockPrice("C")}, B {unlockPrice("B")}, A {unlockPrice("A")}, S {unlockPrice("S")} coins.

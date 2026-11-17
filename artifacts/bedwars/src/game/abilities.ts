@@ -5,12 +5,13 @@ import {
   meleeDamage, placeBlock, spawnProjectile,
 } from "./core";
 
-export type KitCategory = "Fighter" | "Movement" | "Support" | "Economy" | "Defender" | "Ranged";
+export type KitCategory = "Fighter" | "Movement" | "Support" | "Economy" | "Defender" | "Ranged" | "None";
+type ActiveKitCategory = Exclude<KitCategory, "None">;
 export interface AbilityDef { id: string; name: string; cooldown: number; summary: string }
 export interface PassiveDef { name: string; summary: string }
 export interface KitLoadout { kitId: string; kitName: string; tier: string; category: KitCategory; passive: PassiveDef; ability: AbilityDef }
 
-export const PASSIVES: Record<KitCategory, PassiveDef> = {
+export const PASSIVES: Record<ActiveKitCategory, PassiveDef> = {
   Fighter: { name: "Sharpened", summary: "+1 sword damage on every hit." },
   Movement: { name: "Light Feet", summary: "Move 18% faster at all times." },
   Support: { name: "Field Medic", summary: "Out-of-combat regeneration ticks twice as fast." },
@@ -19,7 +20,7 @@ export const PASSIVES: Record<KitCategory, PassiveDef> = {
   Ranged: { name: "Long Reach", summary: "Sword reach +0.5 tiles." },
 };
 
-export const ABILITIES: Record<KitCategory, AbilityDef[]> = {
+export const ABILITIES: Record<ActiveKitCategory, AbilityDef[]> = {
   Fighter: [
     { id: "berserk", name: "Berserk", cooldown: 14, summary: "+3 sword damage for 4s." },
     { id: "lunge", name: "Lunge", cooldown: 9, summary: "Dash up to 2.5 tiles at the bot and strike for +2." },
@@ -64,6 +65,12 @@ export const ABILITIES: Record<KitCategory, AbilityDef[]> = {
   ],
 };
 
+export const NO_KIT_LOADOUT: KitLoadout = {
+  kitId: "no-kit", kitName: "No kit", tier: "—", category: "None",
+  passive: { name: "No passive", summary: "Ranked matches have no kit bonuses." },
+  ability: { id: "none", name: "No ability", cooldown: 0, summary: "Kits and abilities are disabled in ranked matches." },
+};
+
 export const UNLOCK_PRICE: Record<string, number> = { D: 0, C: 20, B: 30, A: 40, S: 50 };
 export const unlockPrice = (tier: string) => UNLOCK_PRICE[tier] ?? 50;
 export const isOwned = (kit: Pick<Kit, "id" | "tier">, unlocked: string[]) => kit.tier === "D" || unlocked.includes(kit.id);
@@ -71,9 +78,9 @@ export const isOwned = (kit: Pick<Kit, "id" | "tier">, unlocked: string[]) => ki
 /** Deterministic: within each category, kits sorted by rank then id get distinct ability variants. */
 export function buildLoadouts(kits: Kit[]): Map<string, KitLoadout> {
   const out = new Map<string, KitLoadout>();
-  const groups = new Map<KitCategory, Kit[]>();
+  const groups = new Map<ActiveKitCategory, Kit[]>();
   for (const k of kits) {
-    const c = (k.category as KitCategory) in ABILITIES ? (k.category as KitCategory) : "Fighter";
+    const c = (k.category as ActiveKitCategory) in ABILITIES ? (k.category as ActiveKitCategory) : "Fighter";
     if (!groups.has(c)) groups.set(c, []);
     groups.get(c)!.push(k);
   }

@@ -11,6 +11,7 @@ export const GetGameProfileResponse = zod.object({
   "coins": zod.number().int(),
   "games": zod.number().int(),
   "wins": zod.number().int(),
+  "rankedRp": zod.number().int(),
   "unlocked": zod.array(zod.string()),
   "ownedSkins": zod.array(zod.string()),
   "equippedSkins": zod.object({
@@ -52,6 +53,7 @@ export const PerformDemoAdminActionResponse = zod.object({
   "coins": zod.number().int(),
   "games": zod.number().int(),
   "wins": zod.number().int(),
+  "rankedRp": zod.number().int(),
   "unlocked": zod.array(zod.string()),
   "ownedSkins": zod.array(zod.string()),
   "equippedSkins": zod.object({
@@ -86,6 +88,7 @@ export const UnlockGameKitResponse = zod.object({
   "coins": zod.number().int(),
   "games": zod.number().int(),
   "wins": zod.number().int(),
+  "rankedRp": zod.number().int(),
   "unlocked": zod.array(zod.string()),
   "ownedSkins": zod.array(zod.string()),
   "equippedSkins": zod.object({
@@ -101,7 +104,8 @@ export const UnlockGameKitResponse = zod.object({
 
 
 export const StartGameMatchBody = zod.object({
-  "kitId": zod.string().min(1)
+  "mode": zod.enum(['pit', 'ranked']),
+  "kitId": zod.string().min(1).optional()
 })
 
 export const StartGameMatchResponse = zod.object({
@@ -118,6 +122,7 @@ export const FinishGameMatchResponse = zod.object({
   "coins": zod.number().int(),
   "games": zod.number().int(),
   "wins": zod.number().int(),
+  "rankedRp": zod.number().int(),
   "unlocked": zod.array(zod.string()),
   "ownedSkins": zod.array(zod.string()),
   "equippedSkins": zod.object({
@@ -139,6 +144,7 @@ export const OpenSkinCrateResponse = zod.object({
   "coins": zod.number().int(),
   "games": zod.number().int(),
   "wins": zod.number().int(),
+  "rankedRp": zod.number().int(),
   "unlocked": zod.array(zod.string()),
   "ownedSkins": zod.array(zod.string()),
   "equippedSkins": zod.object({
@@ -160,6 +166,7 @@ export const EquipGameSkinResponse = zod.object({
   "coins": zod.number().int(),
   "games": zod.number().int(),
   "wins": zod.number().int(),
+  "rankedRp": zod.number().int(),
   "unlocked": zod.array(zod.string()),
   "ownedSkins": zod.array(zod.string()),
   "equippedSkins": zod.object({

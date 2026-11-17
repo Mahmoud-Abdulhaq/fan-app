@@ -16,7 +16,7 @@ function Hold({ onDown, onUp, children, className, label, testId }: { onDown: ()
   );
 }
 
-export function TouchControls({ touch, onPlace, onAbility, onShop }: { touch: MutableRefObject<TouchState>; onPlace: () => void; onAbility: () => void; onShop: () => void }) {
+export function TouchControls({ touch, onPlace, onAbility, onShop, showAbility = true }: { touch: MutableRefObject<TouchState>; onPlace: () => void; onAbility: () => void; onShop: () => void; showAbility?: boolean }) {
   const dirs = useRef(new Set<string>());
   const sync = () => {
     const d = dirs.current;
@@ -39,7 +39,7 @@ export function TouchControls({ touch, onPlace, onAbility, onShop }: { touch: Mu
       </div>
       <div className="grid grid-cols-3 gap-1.5">
         <Hold onDown={onShop} label="Shop" testId="touch-shop" className="h-12 w-14 text-[10px] font-bold"><ShoppingBag className="h-5 w-5" />Shop</Hold>
-        <Hold onDown={onAbility} label="Ability" testId="touch-ability" className="h-12 w-14 text-[10px] font-bold"><Sparkles className="h-5 w-5" />Q</Hold>
+        {showAbility && <Hold onDown={onAbility} label="Ability" testId="touch-ability" className="h-12 w-14 text-[10px] font-bold"><Sparkles className="h-5 w-5" />Q</Hold>}
         <Hold onDown={onPlace} label="Place block" testId="touch-place" className="h-12 w-14 text-[10px] font-bold"><Box className="h-5 w-5" />Block</Hold>
         <Hold onDown={() => { touch.current.mine = true; }} onUp={() => { touch.current.mine = false; }} label="Axe" testId="touch-mine" className="col-span-1 h-16 w-14 text-[10px] font-bold"><Axe className="h-6 w-6" />Axe</Hold>
         <Hold onDown={() => { touch.current.attack = true; }} onUp={() => { touch.current.attack = false; }} label="Sword" testId="touch-attack" className="col-span-2 h-16 w-full bg-[#29292d] text-xs font-bold"><Sword className="h-7 w-7" />Sword</Hold>

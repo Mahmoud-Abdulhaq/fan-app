@@ -55,7 +55,7 @@ export function onHomeIsland(f: Fighter) {
   return f.x >= r.x0 && f.x < r.x1 + 1 && f.y >= r.y0 && f.y < r.y1 + 1;
 }
 
-export function buildMap(mapId: ArenaMapId = "classic") {
+export function buildMap(mapId: ArenaMapId = "classic", bridgeRoutes = true) {
   const base = new Uint8Array(W * H);
   const wall = new Uint8Array(W * H);
   const paint = (x: number, y: number, value: number) => { if (inBounds(x, y)) base[idx(x, y)] = value; };
@@ -71,19 +71,21 @@ export function buildMap(mapId: ArenaMapId = "classic") {
     for (let y = 4; y <= 6; y++) for (let x = 12; x <= 14; x++) paint(x, y, GROUND);
     for (let y = 8; y <= 10; y++) for (let x = 25; x <= 27; x++) paint(x, y, GROUND);
   }
-  const bridge = (x: number, y: number) => paint(x, y, BRIDGE);
-  const routeY = (x: number): number => {
-    if (mapId === "crosswind") return x < 13 ? 6 : x < 19 ? 7 : x < 25 ? 8 : 7;
-    if (mapId === "snake-run") return x < 12 ? 7 : x < 16 ? 6 : x < 20 ? 5 : x < 24 ? 6 : x < 28 ? 7 : 8;
-    return 7;
-  };
-  let previousY = routeY(7);
-  for (let x = 7; x <= 32; x++) {
-    const y = routeY(x);
-    for (let fillY = Math.min(previousY, y); fillY <= Math.max(previousY, y); fillY++) bridge(x, fillY);
-    if (mapId === "twin-bridges") { bridge(x, 6); bridge(x, 8); }
-    if (mapId === "fortress") { bridge(x, 6); bridge(x, 7); bridge(x, 8); }
-    previousY = y;
+  if (bridgeRoutes) {
+    const bridge = (x: number, y: number) => paint(x, y, BRIDGE);
+    const routeY = (x: number): number => {
+      if (mapId === "crosswind") return x < 13 ? 6 : x < 19 ? 7 : x < 25 ? 8 : 7;
+      if (mapId === "snake-run") return x < 12 ? 7 : x < 16 ? 6 : x < 20 ? 5 : x < 24 ? 6 : x < 28 ? 7 : 8;
+      return 7;
+    };
+    let previousY = routeY(7);
+    for (let x = 7; x <= 32; x++) {
+      const y = routeY(x);
+      for (let fillY = Math.min(previousY, y); fillY <= Math.max(previousY, y); fillY++) bridge(x, fillY);
+      if (mapId === "twin-bridges") { bridge(x, 6); bridge(x, 8); }
+      if (mapId === "fortress") { bridge(x, 6); bridge(x, 7); bridge(x, 8); }
+      previousY = y;
+    }
   }
   return { base, wall, wallSkin: new Uint8Array(W * H) };
 }
@@ -170,6 +172,7 @@ export function placeBlock(s: GameState, f: Fighter, c: Cell, free = false): Pla
 
 export type MineResult = "bed" | "own-bed" | "wall" | "broke" | "bridge" | "occupied" | "nothing";
 export function mineCell(s: GameState, f: Fighter, c: Cell): MineResult {
+  if (f.axe < 0) return "nothing";
   const bed = bedAt(s, c.x, c.y);
   const dmg = AXE_DMG[f.axe];
   if (bed) {

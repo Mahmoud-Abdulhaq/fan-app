@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent as RPointerEvent } from "react";
 import { DoorOpen, Pause, Play } from "lucide-react";
-import { createGame, hudSnapshot, step, SHOP_ITEMS, STEP, type HudSnapshot } from "@/game/engine";
+import { createGame, hudSnapshot, shopItemsForGame, step, STEP, type HudSnapshot } from "@/game/engine";
 import { botThink } from "@/game/bot";
 import { renderGame, type RenderOpts } from "@/game/renderer";
 import { MIN_REWARD_SECONDS, bedAt, canPlace, dist, onHomeIsland, resolveTarget, wallAt } from "@/game/core";
-import { W, H, CELL, type Action, type Cell, type Input, type ShopItemId, type EquippedSkins } from "@/game/types";
+import { W, H, CELL, type Action, type Cell, type GameMode, type Input, type ShopItemId, type EquippedSkins } from "@/game/types";
 import type { ArenaMapId } from "@/game/maps";
 import type { KitLoadout } from "@/game/abilities";
 import { formatKey, KEYBIND_ACTIONS, type KeybindAction, type MinigameSettings } from "@/game/settings";
@@ -18,12 +18,12 @@ function currentKeymap(settings: MinigameSettings): Record<string, KeybindAction
   return Object.fromEntries(KEYBIND_ACTIONS.map((action) => [settings.keybinds[action], action]));
 }
 
-export function GameView({ playerKit, botKit, mapId, equippedSkins, settings, onFinish }: {
-  playerKit: KitLoadout; botKit: KitLoadout; mapId: ArenaMapId; equippedSkins: EquippedSkins;
+export function GameView({ playerKit, botKit, mapId, mode = "pit", equippedSkins, settings, onFinish }: {
+  playerKit: KitLoadout; botKit: KitLoadout; mapId: ArenaMapId; mode?: GameMode; equippedSkins: EquippedSkins;
   settings: MinigameSettings; onFinish: (o: MatchOutcome) => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [game] = useState(() => createGame({ blueKit: playerKit, orangeKit: botKit, mapId, cosmetics: equippedSkins, seed: (Date.now() & 0xffffff) | 1 }));
+  const [game] = useState(() => createGame({ blueKit: playerKit, orangeKit: botKit, mapId, mode, cosmetics: equippedSkins, seed: (Date.now() & 0xffffff) | 1 }));
   const keys = useRef(new Set<string>());
   const actions = useRef<Action[]>([]);
   const touch = useRef<TouchState>({ mx: 0, my: 0, attack: false, mine: false });
@@ -130,7 +130,7 @@ export function GameView({ playerKit, botKit, mapId, equippedSkins, settings, on
       else if (action === "ability" && !e.repeat) actions.current.push({ type: "ability" });
       else if (action === "shop" && !e.repeat) setShopOpen((o) => !o);
       else if (shopOpenRef.current && /^Digit[1-6]$/.test(e.code) && !e.repeat) {
-        const item = SHOP_ITEMS[Number(e.code.slice(5)) - 1];
+        const item = shopItemsForGame(game)[Number(e.code.slice(5)) - 1];
         if (item) actions.current.push({ type: "buy", item: item.id });
       }
     };
@@ -210,7 +210,7 @@ export function GameView({ playerKit, botKit, mapId, equippedSkins, settings, on
                 <p className="mt-1 text-xs">The clock stops while this tab is away. Keys were released.</p>
                 {confirmQuit ? (
                   <div className="mt-4 space-y-2">
-                    <p className="text-sm font-semibold">Forfeit counts as a loss{game.t >= MIN_REWARD_SECONDS ? " (5 coins)" : " with no reward (under 20s)"}.</p>
+                    <p className="text-sm font-semibold">Forfeit counts as a loss{mode === "ranked" ? " (-10 RP)" : game.t >= MIN_REWARD_SECONDS ? " (5 coins)" : " with no reward (under 20s)"}.</p>
                     <div className="flex gap-2">
                       <button type="button" onClick={() => finish(true)} className="flex-1 rounded-md border-2 border-[#B22222] bg-[#202023] px-3 py-2 text-sm font-bold" data-testid="button-confirm-forfeit">Forfeit</button>
                       <button type="button" onClick={() => setConfirmQuit(false)} className="flex-1 rounded-md border border-[#B22222]/40 px-3 py-2 text-sm font-bold" data-testid="button-cancel-forfeit">Keep playing</button>
@@ -229,7 +229,7 @@ export function GameView({ playerKit, botKit, mapId, equippedSkins, settings, on
         <HudBottom hud={hud} kit={playerKit} keybinds={settings.keybinds}
           onAbility={() => actions.current.push({ type: "ability" })} onShop={() => setShopOpen((o) => !o)} />
         {showTouch && (
-          <TouchControls touch={touch} onPlace={() => actions.current.push({ type: "place" })} onAbility={() => actions.current.push({ type: "ability" })} onShop={() => setShopOpen((o) => !o)} />
+          <TouchControls touch={touch} onPlace={() => actions.current.push({ type: "place" })} onAbility={() => actions.current.push({ type: "ability" })} onShop={() => setShopOpen((o) => !o)} showAbility={playerKit.category !== "None"} />
         )}
       </div>
       <aside className="space-y-3">
@@ -239,9 +239,15 @@ export function GameView({ playerKit, botKit, mapId, equippedSkins, settings, on
         </button>
         <LogFeed hud={hud} />
         <div className="mg-paper rounded-lg p-3 text-xs">
-          <p className="font-display text-xs font-bold uppercase tracking-widest">{playerKit.kitName}</p>
-          <p className="mt-1"><span className="font-bold">{playerKit.passive.name}:</span> {playerKit.passive.summary}</p>
-          <p className="mt-1"><span className="font-bold">{playerKit.ability.name} ({formatKey(settings.keybinds.ability)}):</span> {playerKit.ability.summary}</p>
+          {playerKit.category === "None" ? (
+            <p className="font-display text-xs font-bold uppercase tracking-widest">Ranked match / no kits</p>
+          ) : (
+            <>
+              <p className="font-display text-xs font-bold uppercase tracking-widest">{playerKit.kitName}</p>
+              <p className="mt-1"><span className="font-bold">{playerKit.passive.name}:</span> {playerKit.passive.summary}</p>
+              <p className="mt-1"><span className="font-bold">{playerKit.ability.name} ({formatKey(settings.keybinds.ability)}):</span> {playerKit.ability.summary}</p>
+            </>
+          )}
         </div>
         {settings.showHints && (
           <div className="mg-paper rounded-lg p-3 text-xs leading-relaxed" data-testid="panel-controls">
@@ -250,7 +256,8 @@ export function GameView({ playerKit, botKit, mapId, equippedSkins, settings, on
             <p><kbd>{formatKey(settings.keybinds.attack)}</kbd> or click bot: sword</p>
             <p><kbd>{formatKey(settings.keybinds.mine)}</kbd> or right-click: axe (walls, bridges, bed)</p>
             <p><kbd>{formatKey(settings.keybinds.place)}</kbd> or click-drag: place block</p>
-            <p><kbd>{formatKey(settings.keybinds.ability)}</kbd> ability, <kbd>{formatKey(settings.keybinds.shop)}</kbd> shop, <kbd>{formatKey(settings.keybinds.pause)}</kbd> pause (<kbd>Esc</kbd> always works)</p>
+            {playerKit.category !== "None" && <p><kbd>{formatKey(settings.keybinds.ability)}</kbd> ability</p>}
+            <p><kbd>{formatKey(settings.keybinds.shop)}</kbd> shop, <kbd>{formatKey(settings.keybinds.pause)}</kbd> pause (<kbd>Esc</kbd> always works)</p>
             <p className="mt-1 opacity-80">Dashed square shows where your block or axe lands.</p>
           </div>
         )}

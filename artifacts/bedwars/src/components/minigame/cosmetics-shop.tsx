@@ -174,20 +174,19 @@ export function CosmeticsShopPanel({ kits, profile, openingCrate, equippingSlot,
             </div>
 
             <div className="mt-3 grid gap-3 pr-1 sm:grid-cols-2" data-testid="skin-catalog">
-              <div className="grid gap-3 sm:grid-cols-2">
-                {skinCategories.map(({ slot, title, crate }) => {
+              {skinCategories.map(({ slot, title, crate }) => {
                   const categorySkins = allSkins
                     .filter((skin) => skin.slot === slot)
                     .sort((a, b) => a.name.localeCompare(b.name));
                   const ownedInCategory = categorySkins.filter((skin) => ownedSkinIds.has(skin.id)).length;
                   return (
-                    <section key={slot} aria-labelledby={`skin-category-${slot}`} className="flex h-80 max-h-80 flex-col border border-[#421a1a] bg-[#0d0a0a] p-3" data-testid={`skin-category-${slot}`}>
+                    <section key={slot} aria-labelledby={`skin-category-${slot}`} className="border border-[#421a1a] bg-[#0d0a0a] p-3" data-testid={`skin-category-${slot}`}>
                       <header className="mb-2 flex shrink-0 items-center justify-between gap-2 border-b border-[#421a1a] pb-2">
                         <h4 id={`skin-category-${slot}`} className="font-display text-sm font-bold uppercase text-[#B22222]">{title}</h4>
                         <span className="font-mono text-[9px] uppercase text-[#8f2929]">{ownedInCategory} / {categorySkins.length}</span>
                       </header>
                       {categorySkins.length ? (
-                        <ul className="min-h-0 flex-1 space-y-2 overflow-y-auto">
+                        <ul className="space-y-2">
                           {categorySkins.map((skin) => {
                             const owned = ownedSkinIds.has(skin.id);
                             const equipped = profile.equippedSkins[slot] === skin.id;
@@ -199,7 +198,7 @@ export function CosmeticsShopPanel({ kits, profile, openingCrate, equippingSlot,
                               >
                                 <SkinMark skin={skin} />
                                 <div className="min-w-0 flex-1">
-                                  <p className="truncate font-display text-xs font-bold text-[#B22222]" data-testid={`text-skin-name-${skin.id}`}>
+                                  <p className="break-words font-display text-xs font-bold text-[#B22222]" data-testid={`text-skin-name-${skin.id}`}>
                                     {skin.name}
                                   </p>
                                   <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-[#8f2929]">
@@ -233,9 +232,8 @@ export function CosmeticsShopPanel({ kits, profile, openingCrate, equippingSlot,
                     </section>
                   );
                 })}
-              </div>
               {unknownOwnedSkins.length > 0 && (
-                <p className="mt-3 border border-[#421a1a] bg-[#0b0808] p-2 font-mono text-[9px] text-[#8f2929]">
+                <p className="border border-[#421a1a] bg-[#0b0808] p-2 font-mono text-[9px] text-[#8f2929] sm:col-span-2">
                   {unknownOwnedSkins.length} unlisted {unknownOwnedSkins.length === 1 ? "skin is" : "skins are"} still saved to your account.
                 </p>
               )}

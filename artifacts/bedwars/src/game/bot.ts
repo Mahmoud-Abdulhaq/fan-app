@@ -44,6 +44,14 @@ export function findPath(s: GameState, from: Cell, isGoal: (c: Cell) => boolean)
 
 export function choosePurchase(s: GameState): ShopItemId | null {
   const me = s.orange;
+  if (s.mode === "ranked") {
+    const rankedOrder: ShopItemId[] = [];
+    if (me.blocks < 16) rankedOrder.push("wool8", "wool20");
+    if (me.axe < 1) rankedOrder.push("axe1");
+    rankedOrder.push("axe2");
+    for (const id of rankedOrder) if (buyStatus(s, me, id) === "ok") return id;
+    return null;
+  }
   const order: ShopItemId[] = [];
   if (me.blocks < 16) order.push("wool8");
   if (me.sword < 1) order.push("sword1");
@@ -90,7 +98,7 @@ export function botThink(s: GameState, dt: number): Input {
 
   if (dFoe <= 1.5 + (me.kit.category === "Ranged" ? 0.5 : 0)) input.attack = true;
 
-  if (me.abilityCd <= 0) {
+  if (me.kit.category !== "None" && me.abilityCd <= 0) {
     const cat = me.kit.category, id = me.kit.ability.id;
     let use = false;
     if (cat === "Economy") use = true;

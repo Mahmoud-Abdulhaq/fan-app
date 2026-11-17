@@ -10,6 +10,7 @@ export const GROUND = 1;
 export const BRIDGE = 2;
 
 export type Team = "blue" | "orange";
+export type GameMode = "pit" | "ranked";
 export interface EquippedSkins { sword: string | null; axe: string | null; block: string | null; kit: string | null }
 
 export interface Cell { x: number; y: number }
@@ -80,6 +81,7 @@ export interface BotMemory { thinkT: number; buyT: number; placeT: number; path:
 
 export interface GameState {
   t: number;
+  mode: GameMode;
   base: Uint8Array;
   wall: Uint8Array;
   wallSkin: Uint8Array;

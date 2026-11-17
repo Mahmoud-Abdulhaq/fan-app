@@ -10,6 +10,7 @@ export interface GameProfile {
   coins: number;
   games: number;
   wins: number;
+  rankedRp: number;
   unlocked: string[];
   ownedSkins: string[];
   equippedSkins: GameProfileEquippedSkins;

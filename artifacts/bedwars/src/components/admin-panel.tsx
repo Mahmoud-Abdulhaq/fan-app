@@ -86,7 +86,7 @@ export function AdminPanel() {
       const descriptions: Record<DemoAdminActionInputAction, string> = {
         grantCoins: `${amount?.toLocaleString()} coins added to your account.`,
         setCoins: `Your balance is now ${amount?.toLocaleString()} coins.`,
-        resetStats: "Your wins and matches played are now zero.",
+        resetStats: "Your wins, matches played, and ranked points are now zero.",
         unlockAllKits: "Every kit is now unlocked on your account.",
       };
       toast({ title: "Admin action complete", description: descriptions[action] });
