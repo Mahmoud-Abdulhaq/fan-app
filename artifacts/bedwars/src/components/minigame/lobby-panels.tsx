@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Check, Coins, Lock, Play, RotateCcw, Sparkles, Swords } from "lucide-react";
 import type { Kit } from "@workspace/api-client-react";
 import { isOwned, unlockPrice, type KitLoadout } from "@/game/abilities";
-import { formatKey, KEYBIND_ACTIONS, KEYBIND_LABELS, type KeybindAction, type MinigameSettings, type TouchMode } from "@/game/settings";
 import { ARENA_MAPS, type ArenaMapId } from "@/game/maps";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +37,6 @@ export function KitDossier({ loadout, kit }: { loadout: KitLoadout; kit?: Kit })
     </div>
   );
 }
-
 export function KitPicker({ kits, loadouts, unlocked, selected, onSelect, onShop }: {
   kits: Kit[]; loadouts: Map<string, KitLoadout>; unlocked: string[]; selected: string | null; onSelect: (id: string) => void; onShop: () => void;
 }) {
@@ -64,9 +62,8 @@ export function KitPicker({ kits, loadouts, unlocked, selected, onSelect, onShop
     </div>
   );
 }
-
-export function PlayPanel({ loadout, kit, mapId, onMapChange, settings, onPlay, starting, startError, children }: {
-  loadout: KitLoadout | null; kit?: Kit; mapId: ArenaMapId; onMapChange: (id: ArenaMapId) => void; settings: MinigameSettings; onPlay: () => void; starting: boolean; startError: boolean; children: ReactNode;
+export function PlayPanel({ loadout, kit, mapId, onMapChange, onPlay, starting, startError, children }: {
+  loadout: KitLoadout | null; kit?: Kit; mapId: ArenaMapId; onMapChange: (id: ArenaMapId) => void; onPlay: () => void; starting: boolean; startError: boolean; children: ReactNode;
 }) {
   return (
     <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr]">
@@ -81,7 +78,7 @@ export function PlayPanel({ loadout, kit, mapId, onMapChange, settings, onPlay, 
         <div className="mg-paper rounded-lg p-5">
           <p className="font-mono text-[10px] uppercase tracking-[0.25em]">Match</p>
           <p className="font-display text-xl font-bold">Blue vs Orange bot</p>
-          <p className="mt-1 text-xs">Normal rules every round. No difficulty settings.</p>
+          <p className="mt-1 text-xs">Normal rules every round.</p>
           <p className="mb-2 mt-4 font-mono text-[10px] uppercase tracking-[0.2em]">Choose your map</p>
           <div className="grid gap-1.5 sm:grid-cols-2" role="radiogroup" aria-label="Arena map">
             {ARENA_MAPS.map((map) => (
@@ -105,13 +102,12 @@ export function PlayPanel({ loadout, kit, mapId, onMapChange, settings, onPlay, 
     </div>
   );
 }
-
 export function HowToPlay() {
   const steps = [
     ["Gather", "Stand by the iron generator beside your base. It creates iron every 50 milliseconds."],
     ["Shop", "Use the item-shop worker beside your spawn. The match shop sells blocks, swords, and axes."],
     ["Bridge", "Islands float over the void. Place wool on empty tiles next to solid ground to cross."],
-    ["Break", "Cross to the orange bed and use your axe. Controls can be changed in Arena settings."],
+    ["Break", "Cross to the orange bed and press T or use your axe to break it."],
     ["Finish", "While your bed stands you respawn. Once it breaks, the next death is final."],
   ];
   return (
@@ -185,89 +181,3 @@ export function KitShopPanel({ kits, loadouts, unlocked, coins, pendingId, onUnl
   );
 }
 
-function Toggle({ label, note, value, onChange, id }: { label: string; note: string; value: boolean; onChange: (v: boolean) => void; id: string }) {
-  return (
-    <button type="button" role="switch" aria-checked={value} onClick={() => onChange(!value)} data-testid={`toggle-${id}`}
-      className="flex w-full items-center justify-between gap-4 rounded-md border border-[#B22222]/20 bg-[#141416] px-3 py-2.5 text-left hover:border-[#B22222]/60">
-      <span><span className="block text-sm font-bold">{label}</span><span className="block text-xs">{note}</span></span>
-      <span className={cn("relative h-6 w-11 shrink-0 rounded-full border-2 border-[#B22222] transition-colors", value ? "bg-[#3a3a3f]" : "bg-transparent")}>
-        <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-[#B22222] transition-transform", value ? "translate-x-5" : "translate-x-0.5")} />
-      </span>
-    </button>
-  );
-}
-
-export function SettingsPanel({ settings, update, reset }: { settings: MinigameSettings; update: (p: Partial<MinigameSettings>) => void; reset: () => void }) {
-  const [captureAction, setCaptureAction] = useState<KeybindAction | null>(null);
-  const [keybindMessage, setKeybindMessage] = useState("");
-
-  useEffect(() => {
-    if (!captureAction) return;
-    const capture = (event: KeyboardEvent) => {
-      event.preventDefault();
-      event.stopPropagation();
-      if (event.code === "Escape") {
-        setCaptureAction(null);
-        setKeybindMessage("Key change cancelled.");
-        return;
-      }
-      const allowed = /^Key[A-Z]$/.test(event.code) || /^Digit[0-9]$/.test(event.code)
-        || ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(event.code);
-      if (!allowed) {
-        setKeybindMessage("Use a letter, number, arrow key, or Space.");
-        return;
-      }
-      const conflict = KEYBIND_ACTIONS.find((action) => action !== captureAction && settings.keybinds[action] === event.code);
-      if (conflict) {
-        setKeybindMessage(`${formatKey(event.code)} is already assigned to ${KEYBIND_LABELS[conflict].toLowerCase()}.`);
-        return;
-      }
-      update({ keybinds: { ...settings.keybinds, [captureAction]: event.code } });
-      setCaptureAction(null);
-      setKeybindMessage(`${KEYBIND_LABELS[captureAction]} is now ${formatKey(event.code)}.`);
-    };
-    window.addEventListener("keydown", capture, true);
-    return () => window.removeEventListener("keydown", capture, true);
-  }, [captureAction, settings.keybinds, update]);
-
-  return (
-    <div className="mg-paper max-w-2xl space-y-3 rounded-lg p-5" data-testid="panel-settings">
-      <div className="flex items-center justify-between">
-        <p className="flex items-center gap-2 font-display text-lg font-bold"><Swords className="h-5 w-5" />Arena settings</p>
-        <button type="button" onClick={reset} className="flex items-center gap-1 rounded-md border border-[#B22222]/40 px-2.5 py-1 text-xs font-bold" data-testid="button-reset-settings"><RotateCcw className="h-3.5 w-3.5" />Defaults</button>
-      </div>
-      <p className="text-xs">Saved on this device for your account only. Coins, wins and unlocks live on the server.</p>
-      <Toggle id="grid" label="Tile grid" note="Faint outlines on every floor tile for precise bridging." value={settings.showGrid} onChange={(v) => update({ showGrid: v })} />
-      <Toggle id="shake" label="Screen shake" note="Camera kick on hits and bed breaks." value={settings.screenShake} onChange={(v) => update({ screenShake: v })} />
-      <Toggle id="hints" label="Control card" note="Keep the key reference next to the arena." value={settings.showHints} onChange={(v) => update({ showHints: v })} />
-      <div>
-        <p className="mb-1.5 text-sm font-bold">Touch controls</p>
-        <div className="grid grid-cols-3 gap-1.5">
-          {(["auto", "on", "off"] as TouchMode[]).map((m) => (
-            <button key={m} type="button" onClick={() => update({ touchControls: m })} data-testid={`button-touch-${m}`}
-              className={cn("rounded-md border px-2 py-1.5 text-sm font-bold capitalize", settings.touchControls === m ? "border-2 border-[#B22222] bg-[#2c2c2f]" : "border-[#B22222]/25")}>{m}</button>
-          ))}
-        </div>
-        <p className="mt-1 text-xs">Auto shows the on-screen pad on touch screens.</p>
-      </div>
-      <div className="border-t border-[#B22222]/25 pt-3">
-        <p className="font-display text-sm font-bold">Keyboard controls</p>
-        <p className="mb-2 mt-1 text-xs">Select a key, then press a new one. Changes save automatically.</p>
-        <div className="grid gap-1.5 sm:grid-cols-2">
-          {KEYBIND_ACTIONS.map((action) => (
-            <div key={action} className="flex items-center justify-between gap-2 rounded-md border border-[#B22222]/20 px-2.5 py-1.5">
-              <span className="text-sm font-semibold">{KEYBIND_LABELS[action]}</span>
-              <button type="button" aria-label={`Change ${KEYBIND_LABELS[action]} key`}
-                aria-pressed={captureAction === action} data-testid={`button-keybind-${action}`}
-                onClick={() => { setKeybindMessage(""); setCaptureAction(captureAction === action ? null : action); }}
-                className={cn("min-w-14 rounded border px-2 py-1 font-mono text-xs font-bold", captureAction === action ? "border-2 border-[#B22222] bg-[#2c2c2f]" : "border-[#B22222]/40")}>
-                {captureAction === action ? "Press key…" : formatKey(settings.keybinds[action])}
-              </button>
-            </div>
-          ))}
-        </div>
-        <p className="mt-2 min-h-4 text-xs" aria-live="polite">{keybindMessage || "Each action must use a different key. Escape cancels key selection."}</p>
-      </div>
-    </div>
-  );
-}

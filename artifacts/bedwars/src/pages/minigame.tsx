@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
 import { useUser } from "@clerk/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Coins, Lock, Settings2, ShoppingBag, Swords, Trophy } from "lucide-react";
+import { Coins, Lock, ShoppingBag, Swords, Trophy } from "lucide-react";
 import {
   getGetGameProfileQueryKey, useEquipGameSkin, useFinishGameMatch, useGetGameProfile, useOpenSkinCrate, useStartGameMatch, useUnlockGameKit,
   type EquipSkinInputSlot, type GameProfile, type Kit, type SkinCrateInputCrate,
@@ -16,7 +16,7 @@ import type { ArenaMapId } from "@/game/maps";
 import type { CosmeticCrate, CosmeticSlot } from "@/game/cosmetics";
 import { MIN_REWARD_SECONDS } from "@/game/core";
 import { GameView, type MatchOutcome } from "@/components/minigame/game-view";
-import { KitPicker, KitShopPanel, PlayPanel, SettingsPanel } from "@/components/minigame/lobby-panels";
+import { KitPicker, KitShopPanel, PlayPanel } from "@/components/minigame/lobby-panels";
 import { CosmeticsShopPanel } from "@/components/minigame/cosmetics-shop";
 import { ResultScreen, type SettleState } from "@/components/minigame/result-screen";
 import { cn } from "@/lib/utils";
@@ -52,7 +52,7 @@ function SignedOut() {
 }
 
 type Phase = "lobby" | "playing" | "result";
-type Tab = "play" | "shop" | "settings";
+type Tab = "play" | "shop";
 interface MatchInfo { id: string; kit: KitLoadout; bot: KitLoadout; mapId: ArenaMapId; n: number }
 
 function errMessage(e: unknown) {
@@ -63,7 +63,7 @@ function errMessage(e: unknown) {
 function Arena({ userId }: { userId: string }) {
   const qc = useQueryClient();
   const { toast } = useToast();
-  const { settings, update, reset } = useMinigameSettings(userId);
+  const { settings, update } = useMinigameSettings(userId);
   const [phase, setPhase] = useState<Phase>("lobby");
   const [tab, setTab] = useState<Tab>("play");
   const kitsQ = useKits();
@@ -208,7 +208,7 @@ function Arena({ userId }: { userId: string }) {
 
   const winRate = profile && profile.games > 0 ? ((profile.wins / profile.games) * 100).toFixed(1) : "0.0";
   const TABS: { id: Tab; label: string; icon: typeof Swords }[] = [
-    { id: "play", label: "Play", icon: Swords }, { id: "shop", label: "Shop", icon: ShoppingBag }, { id: "settings", label: "Settings", icon: Settings2 },
+    { id: "play", label: "Play", icon: Swords }, { id: "shop", label: "Shop", icon: ShoppingBag },
   ];
 
   return (
@@ -258,7 +258,6 @@ function Arena({ userId }: { userId: string }) {
         <div key={tab} className="rise">
           {tab === "play" && (
             <PlayPanel loadout={selected} kit={selectedKit} mapId={settings.mapId} onMapChange={(mapId) => update({ mapId })}
-              settings={settings}
               onPlay={play} starting={start.isPending} startError={start.isError}>
               <KitPicker kits={kitsQ.kits} loadouts={loadouts} unlocked={unlocked} selected={selectedId} onSelect={(id) => update({ kitId: id })} onShop={() => setTab("shop")} />
             </PlayPanel>
@@ -273,7 +272,6 @@ function Arena({ userId }: { userId: string }) {
               <KitShopPanel kits={kitsQ.kits} loadouts={loadouts} unlocked={unlocked} coins={profile?.coins ?? 0} pendingId={pendingUnlock} onUnlock={doUnlock} />
             </div>
           )}
-          {tab === "settings" && <SettingsPanel settings={settings} update={update} reset={reset} />}
         </div>
       )}
 

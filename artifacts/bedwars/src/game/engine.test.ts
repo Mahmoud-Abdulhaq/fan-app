@@ -5,6 +5,7 @@ import { PASSIVES, ABILITIES, triggerAbility, type KitLoadout, type KitCategory 
 import { botThink } from "./bot";
 import { ARENA_MAPS } from "./maps";
 import { STATIC_SKINS } from "./cosmetics";
+import { DEFAULT_KEYBINDS, parseSettings } from "./settings";
 
 const loadout = (category: KitCategory = "Fighter", index = 0): KitLoadout => ({
   kitId: `${category}-${index}`, kitName: category, tier: "D", category,
@@ -16,6 +17,15 @@ const tick = (s: ReturnType<typeof game>, seconds: number, bot = false) => {
 };
 
 {
+  assert.deepEqual(DEFAULT_KEYBINDS, {
+    up: "KeyW", down: "KeyS", left: "KeyA", right: "KeyD",
+    attack: "KeyE", mine: "KeyT", place: "KeyR", ability: "KeyQ", shop: "KeyF", pause: "KeyG",
+  }, "arena controls use the requested fixed keys");
+  assert.deepEqual(
+    parseSettings({ keybinds: { attack: "KeyJ", mine: "KeyK", place: "KeyE" } }).keybinds,
+    DEFAULT_KEYBINDS,
+    "saved custom bindings from older versions are ignored",
+  );
   const s = game();
   assert.equal(s.gens.length, 2, "matches use only the two home iron generators");
   assert.ok(s.gens.every((generator) => generator.kind === "iron" && generator.interval === 0.05), "each iron generator releases one iron every 50ms");
